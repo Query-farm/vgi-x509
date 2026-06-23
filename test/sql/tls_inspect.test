@@ -1,0 +1,75 @@
+# name: test/sql/tls_inspect.test
+# description: tls_inspect against the local mock TLS server (start/stop driven by the Makefile)
+# group: [vgi_x509]
+
+require-env VGI_X509_WORKER
+
+require-env VGI_X509_TEST_ADDR
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'x509' AS x509 (TYPE vgi, LOCATION '${VGI_X509_WORKER}');
+
+# The mock TLS server presents a single self-signed cert with CN=mock.tls.local.
+# insecure := true so we inspect (not trust) the self-signed chain.
+
+# Exactly one cert in the presented chain.
+query I
+SELECT count(*) FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true);
+----
+1
+
+# The presented leaf has the expected subject.
+query T
+SELECT subject FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
+----
+CN=mock.tls.local,O=VGI X509 Test
+
+# Self-signed: issuer equals subject.
+query T
+SELECT issuer FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
+----
+CN=mock.tls.local,O=VGI X509 Test
+
+# Fingerprint is a 64-char lowercase hex SHA-256.
+query T
+SELECT regexp_full_match(fingerprint, '^[0-9a-f]{64}$')
+FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
+----
+true
+
+# Leaf is not a CA.
+query T
+SELECT is_ca FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
+----
+false
+
+# Validity columns are real TIMESTAMPs and ordered.
+query T
+SELECT not_before < not_after
+FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
+----
+true
+
+# timeout_ms and server_name options are accepted.
+query I
+SELECT count(*) FROM x509.tls_inspect(
+  '${VGI_X509_TEST_ADDR}',
+  insecure := true,
+  timeout_ms := 5000,
+  server_name := 'mock.tls.local');
+----
+1
+
+# NULL host:port -> no rows (not an error).
+query I
+SELECT count(*) FROM x509.tls_inspect(NULL, insecure := true);
+----
+0
+
+# Unreachable endpoint surfaces a clean error (short timeout keeps it fast).
+statement error
+SELECT * FROM x509.tls_inspect('127.0.0.1:1', insecure := true, timeout_ms := 2000);
+----

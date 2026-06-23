@@ -1,0 +1,152 @@
+# name: test/sql/cert_offline.test
+# description: Offline X.509 certificate scalars + cert_info over a committed PEM literal (no network)
+# group: [vgi_x509]
+
+require-env VGI_X509_WORKER
+
+# haybarn-unittest does NOT autoload the extension for `require vgi` (it is
+# silently SKIPPED). Load it explicitly instead.
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'x509' AS x509 (TYPE vgi, LOCATION '${VGI_X509_WORKER}');
+
+# A committed self-signed fixture certificate (PEM). Generated once with known
+# subject / validity / SANs so these assertions are stable. CN is
+# test.vgi-x509.example, valid 2025-01-01 .. 2035-01-01, ECDSA P-256.
+statement ok
+CREATE TABLE fixture AS SELECT '-----BEGIN CERTIFICATE-----
+MIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg
+WDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN
+MjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw
+OSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq
+hkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac
+Ot2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B
+Af8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV
+HREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt
+cGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo
+KBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0
+-----END CERTIFICATE-----' AS pem;
+
+# ---- subject / issuer (self-signed: equal) ----
+
+query T
+SELECT x509.cert_subject(pem) FROM fixture;
+----
+CN=test.vgi-x509.example,O=VGI X509 Fixture
+
+query T
+SELECT x509.cert_issuer(pem) FROM fixture;
+----
+CN=test.vgi-x509.example,O=VGI X509 Fixture
+
+# ---- serial ----
+
+query T
+SELECT x509.cert_serial(pem) FROM fixture;
+----
+987654321
+
+# ---- key + signature algorithm ----
+
+query T
+SELECT x509.cert_key_algorithm(pem) FROM fixture;
+----
+ECDSA-P256
+
+query T
+SELECT x509.cert_signature_algorithm(pem) FROM fixture;
+----
+ECDSA-SHA256
+
+# ---- fingerprint (stable SHA-256 of the DER) ----
+
+query T
+SELECT x509.cert_fingerprint(pem) FROM fixture;
+----
+9e35a0b16a0912d01fc75093fd8ab5500f0a425e6b91110c0054f66bb7df5b16
+
+# ---- CA flag ----
+
+query T
+SELECT x509.cert_is_ca(pem) FROM fixture;
+----
+false
+
+# ---- validity window ----
+
+query T
+SELECT x509.cert_not_before(pem) FROM fixture;
+----
+2025-01-01 00:00:00
+
+query T
+SELECT x509.cert_not_after(pem) FROM fixture;
+----
+2035-01-01 00:00:00
+
+# Fixture is valid through 2035, so not expired today.
+query T
+SELECT x509.cert_is_expired(pem) FROM fixture;
+----
+false
+
+# ---- subject alternative names (DNS then IP) ----
+
+query T
+SELECT x509.cert_sans(pem) FROM fixture;
+----
+[test.vgi-x509.example, alt.vgi-x509.example, 127.0.0.1]
+
+# A single SAN can be picked out by index (DuckDB lists are 1-based).
+query T
+SELECT x509.cert_sans(pem)[1] FROM fixture;
+----
+test.vgi-x509.example
+
+# ---- cert_info long-format dump ----
+
+# Every expected field is present. cert_info is a table function, so it takes a
+# constant cert argument (a PEM literal), not a subquery.
+query I
+SELECT count(*) FROM x509.cert_info('-----BEGIN CERTIFICATE-----
+MIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg
+WDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN
+MjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw
+OSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq
+hkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac
+Ot2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B
+Af8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV
+HREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt
+cGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo
+KBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0
+-----END CERTIFICATE-----')
+WHERE field IN ('subject','issuer','serial','not_before','not_after',
+                'is_expired','key_algorithm','signature_algorithm',
+                'fingerprint_sha256','is_ca','sans');
+----
+11
+
+# The fingerprint row matches the scalar.
+query T
+SELECT value FROM x509.cert_info('-----BEGIN CERTIFICATE-----
+MIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg
+WDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN
+MjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw
+OSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq
+hkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac
+Ot2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B
+Af8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV
+HREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt
+cGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo
+KBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0
+-----END CERTIFICATE-----') WHERE field = 'fingerprint_sha256';
+----
+9e35a0b16a0912d01fc75093fd8ab5500f0a425e6b91110c0054f66bb7df5b16
+
+# ---- malformed certificate surfaces a clean error (not a crash) ----
+
+statement error
+SELECT x509.cert_subject('not a certificate');
+----

@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="docs/vgi-logo.png" alt="Vector Gateway Interface (VGI)" width="320">
+</p>
+
+<p align="center"><em>A <a href="https://query.farm">Query.Farm</a> VGI worker for DuckDB.</em></p>
+
 # vgi-x509
 
 [![CI](https://github.com/Query-farm/vgi-x509/actions/workflows/ci.yml/badge.svg)](https://github.com/Query-farm/vgi-x509/actions/workflows/ci.yml)
@@ -124,3 +130,12 @@ it via `VGI_X509_TEST_ADDR`, and stops it afterward.
   (`crypto/x509`, `encoding/pem`, `crypto/tls`) — no third-party crypto.
 - The VGI SDK [`vgi-go`](https://github.com/Query-farm/vgi-go) is a separate
   dependency under its own license (the Query Farm Source-Available License).
+
+---
+
+## Authorship & License
+
+Written by [Query.Farm](https://query.farm) — every VGI worker is designed and built by Query.Farm.
+
+Copyright 2026 Query Farm LLC - https://query.farm
+

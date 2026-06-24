@@ -5,16 +5,16 @@ package x509worker
 import "encoding/json"
 
 // Shared per-object discovery / description metadata for the vgi-lint strict
-// profile (0.23.0), which expects these tags on EVERY function and table:
+// profile (0.26.0), which expects these tags on EVERY function and table:
 //
-//   - vgi.title           (VGI124) — human-friendly display name
-//   - vgi.description_llm (VGI112) — concise prose aimed at LLMs
-//   - vgi.description_md  (VGI113) — short Markdown description
-//   - vgi.keywords        (VGI126) — comma-separated search terms / synonyms
-//   - vgi.source_url      (VGI128) — link to the implementing source file
+//   - vgi.title       (VGI124) — human-friendly display name
+//   - vgi.doc_llm     (VGI112) — Markdown narrative aimed at LLMs / agents
+//   - vgi.doc_md      (VGI113) — Markdown narrative for human docs
+//   - vgi.keywords    (VGI126) — comma-separated search terms / synonyms
+//   - vgi.source_url  (VGI128) — link to the implementing source file
 //
-// objectTags(...) builds that map; extra per-object tags (e.g. vgi.columns_md,
-// vgi.executable_examples) are added by the caller.
+// objectTags(...) builds that map; extra per-object tags (e.g.
+// vgi.result_columns_md, vgi.executable_examples) are added by the caller.
 
 // sourceBase is the GitHub blob base for source files in this repo (pinned to
 // main). sourceURL(file) builds the canonical link for a single source file.
@@ -26,13 +26,13 @@ func sourceURL(file string) string { return sourceBase + "/" + file }
 
 // objectTags builds the five standard per-object discovery/description tags.
 // relativeFile is the implementing file under internal/x509worker.
-func objectTags(title, descLLM, descMD, keywords, relativeFile string) map[string]string {
+func objectTags(title, docLLM, docMD, keywords, relativeFile string) map[string]string {
 	return map[string]string{
-		"vgi.title":           title,
-		"vgi.description_llm": descLLM,
-		"vgi.description_md":  descMD,
-		"vgi.keywords":        keywords,
-		"vgi.source_url":      sourceURL(relativeFile),
+		"vgi.title":      title,
+		"vgi.doc_llm":    docLLM,
+		"vgi.doc_md":     docMD,
+		"vgi.keywords":   keywords,
+		"vgi.source_url": sourceURL(relativeFile),
 	}
 }
 

@@ -396,7 +396,7 @@ func (f *certInfoFunc) Metadata() vgi.FunctionMetadata {
 				"cert_info, x509, certificate",
 			"info.go",
 		), map[string]string{
-			"vgi.columns_md": "| column | type | description |\n" +
+			"vgi.result_columns_md": "| column | type | description |\n" +
 				"|---|---|---|\n" +
 				"| `field` | VARCHAR | The certificate attribute name (e.g. `subject`, `issuer`, `serial`, `not_after`, `is_ca`). |\n" +
 				"| `value` | VARCHAR | The attribute's value rendered as text. |",
@@ -508,7 +508,7 @@ func (f *tlsInspectFunc) Metadata() vgi.FunctionMetadata {
 				"tls_inspect, x509, server certificate",
 			"tls.go",
 		), map[string]string{
-			"vgi.columns_md": "| column | type | description |\n" +
+			"vgi.result_columns_md": "| column | type | description |\n" +
 				"|---|---|---|\n" +
 				"| `seq` | INTEGER | Position in the presented chain (0 = leaf/server certificate). |\n" +
 				"| `subject` | VARCHAR | Certificate subject as an RFC 2253 distinguished name. |\n" +

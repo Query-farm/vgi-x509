@@ -40,13 +40,13 @@ func main() {
 			"source":       "vgi-x509",
 			"vgi.title":    "X.509 Certificate & TLS Inspection",
 			"vgi.keywords": "x509, certificate, tls, ssl, pem, der, fingerprint, subject, issuer, expiry, sans, certificate authority, security, compliance",
-			"vgi.description_llm": "Defensive X.509 / TLS inspection toolkit over SQL. Parse a certificate " +
+			"vgi.doc_llm": "Defensive X.509 / TLS inspection toolkit over SQL. Parse a certificate " +
 				"(PEM text or DER bytes) and read its subject, issuer, serial, validity window, public-key and " +
 				"signature algorithms, SHA-256 fingerprint, CA flag, expiry status, and subject alternative " +
 				"names; dump every certificate field in long format; and connect to a live TLS host:port " +
 				"(AUTHORIZED endpoints only) to return the presented certificate chain. Use to audit, triage, " +
 				"and report on certificates and TLS endpoints for security and compliance.",
-			"vgi.description_md": "# x509\n\n" +
+			"vgi.doc_md": "# x509\n\n" +
 				"Parse **X.509 certificates** and inspect **TLS endpoints**, exposed as DuckDB SQL functions. " +
 				"A defensive security / compliance tool.\n\n" +
 				"- Scalars: `cert_subject`, `cert_issuer`, `cert_serial`, `cert_key_algorithm`, " +
@@ -78,11 +78,25 @@ func main() {
 				"category":       "parsing",
 				"topic":          "x509-certificates-and-tls",
 				"vgi.source_url": "https://github.com/Query-farm/vgi-x509/blob/main/internal/x509worker/functions.go",
-				"vgi.description_llm": "X.509 certificate parsing and TLS inspection functions: read subject, " +
+				"vgi.doc_llm": "X.509 certificate parsing and TLS inspection functions: read subject, " +
 					"issuer, serial, validity window, key/signature algorithms, SHA-256 fingerprint, CA flag, " +
 					"expiry status, and subject alternative names from a PEM/DER certificate; dump all fields in " +
 					"long format; and fetch the certificate chain presented by a live TLS host:port.",
-				"vgi.description_md": "X.509 certificate parsing and TLS endpoint inspection functions over Apache Arrow.",
+				"vgi.doc_md": "## x509.main\n\n" +
+					"Defensive **X.509 certificate** parsing and **TLS endpoint** inspection, " +
+					"exposed as DuckDB SQL functions over Apache Arrow.\n\n" +
+					"### Scalars (offline certificate parsing)\n\n" +
+					"`cert_subject`, `cert_issuer`, `cert_serial`, `cert_key_algorithm`, " +
+					"`cert_signature_algorithm`, `cert_fingerprint`, `cert_is_expired`, " +
+					"`cert_is_ca`, `cert_not_before`, `cert_not_after`, `cert_sans`.\n\n" +
+					"### Table functions\n\n" +
+					"- `cert_info(cert)` — long-format `(field, value)` dump of every attribute.\n" +
+					"- `tls_inspect(host_port, ...)` — connect to a live TLS endpoint " +
+					"(**AUTHORIZED endpoints only**) and return the presented certificate chain.\n\n" +
+					"### Usage\n\n" +
+					"Certificate inputs accept **PEM text** (`VARCHAR`) or **DER bytes** (`BLOB`); " +
+					"the content is sniffed at runtime. NULL certificate input yields NULL " +
+					"(scalars) or zero rows (`cert_info`).",
 				// VGI506 representative example queries (catalog-qualified, executable).
 				"vgi.example_queries": x509worker.SchemaExampleQueries,
 			},

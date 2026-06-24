@@ -280,8 +280,41 @@ func (f *certSANsScalar) Process(_ context.Context, params *vgi.ProcessParams, b
 // Table functions.
 // ===========================================================================
 
-// emitState carries the "already emitted" flag shared by table functions.
-type emitState struct{ Done bool }
+// WHY AN EXPLICIT CURSOR, NOT A bool Done (the HTTP-continuation fix):
+//
+// Over the HTTP transport the worker is STATELESS across exchanges — there is no
+// long-lived process holding the live state between Process ticks. The framework
+// round-trips the producer state through an opaque continuation token: after each
+// tick it gob-encodes the state (snapshotting the LIVE user state), the client
+// returns the token, and the worker resumes by gob-decoding it. The HTTP server
+// emits at most one data batch per response, so a producer with more to emit is
+// always resumed mid-stream from its token.
+//
+// The position MUST therefore live in the serialized state. A bare `Done bool`
+// flipped only AFTER the single Emit does not survive the continuation boundary:
+// the resumed tick observes the pre-Emit snapshot, re-emits the same rows, and
+// the scan never terminates (an infinite loop — subprocess/unix keep live state
+// in memory, so they were unaffected and hid the bug). Carrying an explicit
+// Offset that Process advances BEFORE yielding makes the snapshot authoritative.
+//
+// rowsPerTick bounds how many rows each Process tick emits, so the cursor is
+// observable across the continuation boundary (and scales to large results).
+const rowsPerTick = 256
+
+// cursorBounds returns [start,end) for the next bounded slice over n rows
+// starting at *offset, advancing *offset past it; done=true once all consumed.
+func cursorBounds(n int, offset *int) (start, end int, done bool) {
+	if *offset >= n {
+		return 0, 0, true
+	}
+	start = *offset
+	end = start + rowsPerTick
+	if end > n {
+		end = n
+	}
+	*offset = end
+	return start, end, false
+}
 
 // --- cert_info(cert) -> (field, value) -----------------------------------
 
@@ -294,11 +327,12 @@ type certInfoArgs struct {
 	Cert []byte `vgi:"pos=0,type=any,doc=Certificate as PEM text (VARCHAR) or DER bytes (BLOB)"`
 }
 
-// certInfoState holds the flattened (field,value) rows (gob-encodable).
+// certInfoState holds the flattened (field,value) rows (gob-encodable) plus the
+// cursor offset of the next unemitted row.
 type certInfoState struct {
-	emitState
 	Fields []string
 	Values []string
+	Offset int
 }
 
 type certInfoFunc struct{}
@@ -338,14 +372,16 @@ func (f *certInfoFunc) NewState(params *vgi.ProcessParams) (*certInfoState, erro
 	return st, nil
 }
 func (f *certInfoFunc) Process(_ context.Context, _ *vgi.ProcessParams, state *certInfoState, out *vgirpc.OutputCollector) error {
-	if state.Done {
+	start, end, done := cursorBounds(len(state.Fields), &state.Offset)
+	if done {
 		return out.Finish()
 	}
-	state.Done = true
-	n := int64(len(state.Fields))
+	fields := state.Fields[start:end]
+	values := state.Values[start:end]
+	n := int64(len(fields))
 	batch := array.NewRecordBatch(certInfoSchema, []arrow.Array{
-		vgi.BuildStringArray(n, func(i int64) string { return state.Fields[i] }),
-		vgi.BuildStringArray(n, func(i int64) string { return state.Values[i] }),
+		vgi.BuildStringArray(n, func(i int64) string { return fields[i] }),
+		vgi.BuildStringArray(n, func(i int64) string { return values[i] }),
 	}, n)
 	defer batch.Release()
 	return out.Emit(batch)
@@ -382,8 +418,8 @@ type tlsChainRow struct {
 }
 
 type tlsInspectState struct {
-	emitState
-	Rows []tlsChainRow
+	Rows   []tlsChainRow
+	Offset int
 }
 
 type tlsInspectFunc struct{}
@@ -433,11 +469,11 @@ func (f *tlsInspectFunc) NewState(params *vgi.ProcessParams) (*tlsInspectState, 
 	return st, nil
 }
 func (f *tlsInspectFunc) Process(_ context.Context, _ *vgi.ProcessParams, state *tlsInspectState, out *vgirpc.OutputCollector) error {
-	if state.Done {
+	start, end, done := cursorBounds(len(state.Rows), &state.Offset)
+	if done {
 		return out.Finish()
 	}
-	state.Done = true
-	r := state.Rows
+	r := state.Rows[start:end]
 	n := int64(len(r))
 
 	mem := memory.NewGoAllocator()

@@ -3,7 +3,9 @@
 package x509worker
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"testing"
 	"time"
 
@@ -220,6 +222,38 @@ func TestTLSInspectFuncUnreachable(t *testing.T) {
 	if err == nil {
 		t.Errorf("unreachable host should surface an error")
 	}
+}
+
+// TestCursorSurvivesContinuation mirrors the HTTP transport: the per-scan state
+// is gob round-tripped between ticks, so the cursor offset must advance across
+// the boundary and eventually drain. A bare Done flag flipped after Emit would
+// re-emit row 0 forever; the explicit Offset terminates.
+func TestCursorSurvivesContinuation(t *testing.T) {
+	n := rowsPerTick*2 + 5 // spans 3 ticks
+	fields := make([]string, n)
+	values := make([]string, n)
+	st := &certInfoState{Fields: fields, Values: values}
+	emitted := 0
+	for tick := 0; tick < 100; tick++ {
+		var buf bytes.Buffer
+		if err := gob.NewEncoder(&buf).Encode(st); err != nil {
+			t.Fatalf("gob encode: %v", err)
+		}
+		var resumed certInfoState
+		if err := gob.NewDecoder(&buf).Decode(&resumed); err != nil {
+			t.Fatalf("gob decode: %v", err)
+		}
+		st = &resumed
+		start, end, done := cursorBounds(len(st.Fields), &st.Offset)
+		if done {
+			if emitted != n {
+				t.Fatalf("drained after emitting %d of %d rows", emitted, n)
+			}
+			return
+		}
+		emitted += end - start
+	}
+	t.Fatal("cursor never drained — continuation loop did not terminate")
 }
 
 func TestRegisterDoesNotPanic(t *testing.T) {

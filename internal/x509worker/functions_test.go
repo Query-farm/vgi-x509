@@ -50,7 +50,7 @@ func stringParams(out arrow.DataType) *vgi.ProcessParams {
 
 func TestCertSubjectScalar(t *testing.T) {
 	g := mustGen(t, nil)
-	f := &certStringScalar{"cert_subject", "", func(h *certHandle) string { return Subject(h.cert) }}
+	f := &certStringScalar{name: "cert_subject", fn: func(h *certHandle) string { return Subject(h.cert) }}
 
 	// PEM input.
 	batch := pemCol(g.PEM, false)
@@ -79,7 +79,7 @@ func TestCertSubjectScalar(t *testing.T) {
 }
 
 func TestCertScalarNullPropagation(t *testing.T) {
-	f := &certStringScalar{"cert_subject", "", func(h *certHandle) string { return Subject(h.cert) }}
+	f := &certStringScalar{name: "cert_subject", fn: func(h *certHandle) string { return Subject(h.cert) }}
 	batch := pemCol(nil, true)
 	defer batch.Release()
 	out, err := f.Process(context.Background(), stringParams(arrow.BinaryTypes.String), batch)
@@ -93,7 +93,7 @@ func TestCertScalarNullPropagation(t *testing.T) {
 }
 
 func TestCertScalarMalformedError(t *testing.T) {
-	f := &certStringScalar{"cert_subject", "", func(h *certHandle) string { return Subject(h.cert) }}
+	f := &certStringScalar{name: "cert_subject", fn: func(h *certHandle) string { return Subject(h.cert) }}
 	batch := pemCol([]byte("garbage not a cert"), false)
 	defer batch.Release()
 	_, err := f.Process(context.Background(), stringParams(arrow.BinaryTypes.String), batch)
@@ -104,7 +104,7 @@ func TestCertScalarMalformedError(t *testing.T) {
 
 func TestCertBoolScalar(t *testing.T) {
 	g := mustGen(t, nil)
-	f := &certBoolScalar{"cert_is_ca", "", func(h *certHandle) bool { return IsCA(h.cert) }}
+	f := &certBoolScalar{name: "cert_is_ca", fn: func(h *certHandle) bool { return IsCA(h.cert) }}
 	batch := pemCol(g.PEM, false)
 	defer batch.Release()
 	out, err := f.Process(context.Background(), stringParams(arrow.FixedWidthTypes.Boolean), batch)
@@ -119,7 +119,7 @@ func TestCertBoolScalar(t *testing.T) {
 
 func TestCertTimestampScalar(t *testing.T) {
 	g := mustGen(t, nil)
-	f := &certTimestampScalar{"cert_not_after", "", func(h *certHandle) time.Time { return NotAfter(h.cert) }}
+	f := &certTimestampScalar{name: "cert_not_after", fn: func(h *certHandle) time.Time { return NotAfter(h.cert) }}
 	batch := pemCol(g.PEM, false)
 	defer batch.Release()
 	out, err := f.Process(context.Background(), stringParams(tsType), batch)

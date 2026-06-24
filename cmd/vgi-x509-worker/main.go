@@ -38,6 +38,42 @@ func main() {
 		vgi.WithCatalogComment("Parse X.509 certificates and inspect TLS endpoints"),
 		vgi.WithCatalogTags(map[string]string{
 			"source": "vgi-x509",
+			"vgi.description_llm": "Defensive X.509 / TLS inspection toolkit over SQL. Parse a certificate " +
+				"(PEM text or DER bytes) and read its subject, issuer, serial, validity window, public-key and " +
+				"signature algorithms, SHA-256 fingerprint, CA flag, expiry status, and subject alternative " +
+				"names; dump every certificate field in long format; and connect to a live TLS host:port " +
+				"(AUTHORIZED endpoints only) to return the presented certificate chain. Use to audit, triage, " +
+				"and report on certificates and TLS endpoints for security and compliance.",
+			"vgi.description_md": "# x509\n\n" +
+				"Parse **X.509 certificates** and inspect **TLS endpoints**, exposed as DuckDB SQL functions. " +
+				"A defensive security / compliance tool.\n\n" +
+				"- Scalars: `cert_subject`, `cert_issuer`, `cert_serial`, `cert_key_algorithm`, " +
+				"`cert_signature_algorithm`, `cert_fingerprint`, `cert_is_expired`, `cert_is_ca`, " +
+				"`cert_not_before`, `cert_not_after`, `cert_sans` (offline certificate parsing).\n" +
+				"- Table functions: `cert_info` (long-format field dump), `tls_inspect` (live TLS chain, " +
+				"AUTHORIZED endpoints only).\n\n" +
+				"Certificate inputs accept PEM text (VARCHAR) or DER bytes (BLOB).",
+			"vgi.author":             "Query.Farm",
+			"vgi.copyright":          "Copyright 2026 Query Farm LLC - https://query.farm",
+			"vgi.license":            "MIT",
+			"vgi.support_contact":    "https://github.com/Query-farm/vgi-x509/issues",
+			"vgi.support_policy_url": "https://github.com/Query-farm/vgi-x509/blob/main/README.md",
+		}),
+		vgi.WithCatalogInfo(vgi.CatalogInfo{
+			Name:      x509worker.CatalogName,
+			SourceURL: ptr("https://github.com/Query-farm/vgi-x509"),
+		}),
+		vgi.WithSchemaComments(map[string]string{
+			"main": "X.509 certificate parsing and TLS endpoint inspection functions.",
+		}),
+		vgi.WithSchemaTags(map[string]map[string]string{
+			"main": {
+				"vgi.description_llm": "X.509 certificate parsing and TLS inspection functions: read subject, " +
+					"issuer, serial, validity window, key/signature algorithms, SHA-256 fingerprint, CA flag, " +
+					"expiry status, and subject alternative names from a PEM/DER certificate; dump all fields in " +
+					"long format; and fetch the certificate chain presented by a live TLS host:port.",
+				"vgi.description_md": "X.509 certificate parsing and TLS endpoint inspection functions over Apache Arrow.",
+			},
 		}),
 	)
 	x509worker.Register(w)
@@ -59,6 +95,9 @@ func main() {
 	}
 	w.RunStdio()
 }
+
+// ptr returns a pointer to v (for optional string fields like SourceURL).
+func ptr[T any](v T) *T { return &v }
 
 // filterKnownFlags drops argv tokens for flags this binary doesn't define, so
 // launcher-injected differentiation flags don't abort flag parsing. Flags named

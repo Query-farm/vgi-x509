@@ -109,7 +109,7 @@ func (f *certStringScalar) Metadata() vgi.FunctionMetadata {
 	}
 }
 func (f *certStringScalar) ArgumentSpecs() []vgi.ArgSpec {
-	return []vgi.ArgSpec{{Name: "cert", Position: 0, ArrowType: "any", Doc: "Certificate as PEM text (VARCHAR) or DER bytes (BLOB)"}}
+	return []vgi.ArgSpec{{Name: "cert", Position: 0, ArrowType: "any", Doc: "The X.509 certificate to inspect, supplied either as PEM-encoded text or as raw DER-encoded bytes; the encoding is detected automatically"}}
 }
 func (f *certStringScalar) OnBind(_ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.BinaryTypes.String)
@@ -155,7 +155,7 @@ func (f *certBoolScalar) Metadata() vgi.FunctionMetadata {
 	}
 }
 func (f *certBoolScalar) ArgumentSpecs() []vgi.ArgSpec {
-	return []vgi.ArgSpec{{Name: "cert", Position: 0, ArrowType: "any", Doc: "Certificate as PEM text (VARCHAR) or DER bytes (BLOB)"}}
+	return []vgi.ArgSpec{{Name: "cert", Position: 0, ArrowType: "any", Doc: "The X.509 certificate to inspect, supplied either as PEM-encoded text or as raw DER-encoded bytes; the encoding is detected automatically"}}
 }
 func (f *certBoolScalar) OnBind(_ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.FixedWidthTypes.Boolean)
@@ -201,7 +201,7 @@ func (f *certTimestampScalar) Metadata() vgi.FunctionMetadata {
 	}
 }
 func (f *certTimestampScalar) ArgumentSpecs() []vgi.ArgSpec {
-	return []vgi.ArgSpec{{Name: "cert", Position: 0, ArrowType: "any", Doc: "Certificate as PEM text (VARCHAR) or DER bytes (BLOB)"}}
+	return []vgi.ArgSpec{{Name: "cert", Position: 0, ArrowType: "any", Doc: "The X.509 certificate to inspect, supplied either as PEM-encoded text or as raw DER-encoded bytes; the encoding is detected automatically"}}
 }
 func (f *certTimestampScalar) OnBind(_ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(tsType)
@@ -251,7 +251,6 @@ func (f *certSANsScalar) Metadata() vgi.FunctionMetadata {
 			"`VARCHAR[]`.",
 		"san, subject alternative names, dns names, ip addresses, alt names, hostnames, "+
 			"cert_sans, x509, certificate",
-		"cert.go",
 	), map[string]string{
 		// VGI509: at least one object ships guaranteed-runnable executable examples.
 		"vgi.executable_examples": executableExamplesJSON,
@@ -271,7 +270,7 @@ func (f *certSANsScalar) Metadata() vgi.FunctionMetadata {
 	}
 }
 func (f *certSANsScalar) ArgumentSpecs() []vgi.ArgSpec {
-	return []vgi.ArgSpec{{Name: "cert", Position: 0, ArrowType: "any", Doc: "Certificate as PEM text (VARCHAR) or DER bytes (BLOB)"}}
+	return []vgi.ArgSpec{{Name: "cert", Position: 0, ArrowType: "any", Doc: "The X.509 certificate to inspect, supplied either as PEM-encoded text or as raw DER-encoded bytes; the encoding is detected automatically"}}
 }
 func (f *certSANsScalar) OnBind(_ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.ListOf(arrow.BinaryTypes.String))
@@ -357,7 +356,7 @@ var certInfoSchema = arrow.NewSchema([]arrow.Field{
 }, nil)
 
 type certInfoArgs struct {
-	Cert []byte `vgi:"pos=0,type=any,doc=Certificate as PEM text (VARCHAR) or DER bytes (BLOB)"`
+	Cert []byte `vgi:"pos=0,type=any,doc=The X.509 certificate to inspect, supplied either as PEM-encoded text or as raw DER-encoded bytes; the encoding is detected automatically"`
 }
 
 // certInfoState holds the flattened (field,value) rows (gob-encodable) plus the
@@ -394,7 +393,6 @@ func (f *certInfoFunc) Metadata() vgi.FunctionMetadata {
 			"Long-format dump of all certificate attributes as `(field, value)` rows.",
 			"cert info, certificate fields, dump, inspect certificate, attributes, long format, "+
 				"cert_info, x509, certificate",
-			"info.go",
 		), map[string]string{
 			"vgi.result_columns_md": "| column | type | description |\n" +
 				"|---|---|---|\n" +
@@ -506,7 +504,6 @@ func (f *tlsInspectFunc) Metadata() vgi.FunctionMetadata {
 				"endpoints only).",
 			"tls, tls inspect, certificate chain, handshake, endpoint, host port, sni, "+
 				"tls_inspect, x509, server certificate",
-			"tls.go",
 		), map[string]string{
 			"vgi.result_columns_md": "| column | type | description |\n" +
 				"|---|---|---|\n" +
@@ -626,63 +623,63 @@ func Register(w *vgi.Worker) {
 		objectTags("Certificate Subject Name",
 			"Return the subject of a certificate as an RFC 2253 distinguished name (e.g. CN=..,O=..). Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
 			"Read the certificate's subject as an RFC 2253 distinguished name.",
-			"subject, distinguished name, dn, common name, cn, cert_subject, x509, certificate", "cert.go"),
+			"subject, distinguished name, dn, common name, cn, cert_subject, x509, certificate"),
 		certExamples("cert_subject", "Read the subject distinguished name of a PEM certificate."), func(h *certHandle) string { return Subject(h.cert) }})
 	w.RegisterScalar(&certStringScalar{"cert_issuer", "Certificate issuer as an RFC 2253 distinguished name",
 		objectTags("Certificate Issuer Name",
 			"Return the issuer of a certificate as an RFC 2253 distinguished name (the CA that signed it). Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
 			"Read the certificate's issuer as an RFC 2253 distinguished name.",
-			"issuer, distinguished name, dn, ca, signing authority, cert_issuer, x509, certificate", "cert.go"),
+			"issuer, distinguished name, dn, ca, signing authority, cert_issuer, x509, certificate"),
 		certExamples("cert_issuer", "Read the issuer distinguished name of a PEM certificate."), func(h *certHandle) string { return Issuer(h.cert) }})
 	w.RegisterScalar(&certStringScalar{"cert_serial", "Certificate serial number (decimal string)",
 		objectTags("Certificate Serial Number",
 			"Return the certificate serial number as a decimal string. Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
 			"Read the certificate serial number as a decimal string.",
-			"serial, serial number, cert_serial, identifier, x509, certificate", "cert.go"),
+			"serial, serial number, cert_serial, identifier, x509, certificate"),
 		certExamples("cert_serial", "Read the serial number of a PEM certificate as a decimal string."), func(h *certHandle) string { return Serial(h.cert) }})
 	w.RegisterScalar(&certStringScalar{"cert_key_algorithm", "Public-key algorithm with size/curve (e.g. RSA-2048, ECDSA-P256)",
 		objectTags("Certificate Public-Key Algorithm",
 			"Return the certificate's public-key algorithm with its size or curve, e.g. RSA-2048 or ECDSA-P256. Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
 			"Read the public-key algorithm and size/curve, e.g. `RSA-2048` or `ECDSA-P256`.",
-			"key algorithm, public key, rsa, ecdsa, ed25519, curve, key size, cert_key_algorithm, x509, certificate", "cert.go"),
+			"key algorithm, public key, rsa, ecdsa, ed25519, curve, key size, cert_key_algorithm, x509, certificate"),
 		certExamples("cert_key_algorithm", "Read the public-key algorithm and size/curve of a PEM certificate."), func(h *certHandle) string { return KeyAlgorithm(h.cert) }})
 	w.RegisterScalar(&certStringScalar{"cert_signature_algorithm", "Certificate signature algorithm",
 		objectTags("Certificate Signature Algorithm",
 			"Return the algorithm used to sign the certificate, e.g. ECDSA-SHA256 or SHA256-RSA. Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
 			"Read the certificate signature algorithm, e.g. `ECDSA-SHA256`.",
-			"signature algorithm, signing algorithm, sha256, ecdsa, rsa, cert_signature_algorithm, x509, certificate", "cert.go"),
+			"signature algorithm, signing algorithm, sha256, ecdsa, rsa, cert_signature_algorithm, x509, certificate"),
 		certExamples("cert_signature_algorithm", "Read the signature algorithm of a PEM certificate."), func(h *certHandle) string { return SignatureAlgorithm(h.cert) }})
 	w.RegisterScalar(&certStringScalar{"cert_fingerprint", "SHA-256 fingerprint of the certificate (lowercase hex)",
 		objectTags("Certificate SHA-256 Fingerprint",
 			"Return the SHA-256 fingerprint of the certificate's DER encoding as lowercase hex. Use it to uniquely identify or pin a certificate. Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
 			"Compute the SHA-256 fingerprint of the certificate (lowercase hex).",
-			"fingerprint, sha256, thumbprint, hash, certificate pinning, cert_fingerprint, x509, certificate", "cert.go"),
+			"fingerprint, sha256, thumbprint, hash, certificate pinning, cert_fingerprint, x509, certificate"),
 		certExamples("cert_fingerprint", "Compute the SHA-256 fingerprint of a PEM certificate (lowercase hex)."), func(h *certHandle) string { return Fingerprint(h.cert) }})
 
 	w.RegisterScalar(&certBoolScalar{"cert_is_expired", "Whether the certificate is outside its validity window now",
 		objectTags("Certificate Expiry Check",
 			"Return whether the certificate is currently outside its validity window (before not_before or after not_after relative to now). Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
 			"Check whether the certificate is currently expired (outside its validity window).",
-			"expired, expiry, validity, not after, not before, valid now, cert_is_expired, x509, certificate", "cert.go"),
+			"expired, expiry, validity, not after, not before, valid now, cert_is_expired, x509, certificate"),
 		certExamples("cert_is_expired", "Check whether a PEM certificate is currently outside its validity window."), func(h *certHandle) bool { return IsExpired(h.cert, time.Now()) }})
 	w.RegisterScalar(&certBoolScalar{"cert_is_ca", "Whether the certificate is a CA certificate",
 		objectTags("Certificate CA Flag",
 			"Return whether the certificate is a CA certificate (basic constraints CA=true). Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
 			"Check whether the certificate is a CA certificate.",
-			"ca, certificate authority, basic constraints, is ca, intermediate, root, cert_is_ca, x509, certificate", "cert.go"),
+			"ca, certificate authority, basic constraints, is ca, intermediate, root, cert_is_ca, x509, certificate"),
 		certExamples("cert_is_ca", "Check whether a PEM certificate is a CA certificate."), func(h *certHandle) bool { return IsCA(h.cert) }})
 
 	w.RegisterScalar(&certTimestampScalar{"cert_not_before", "Start of the certificate validity window (UTC)",
 		objectTags("Certificate Valid-From Time",
 			"Return the start of the certificate's validity window (notBefore) as a UTC TIMESTAMP. Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
 			"Read the start of the certificate validity window (`notBefore`, UTC).",
-			"not before, valid from, validity start, issued, cert_not_before, x509, certificate", "cert.go"),
+			"not before, valid from, validity start, issued, cert_not_before, x509, certificate"),
 		certExamples("cert_not_before", "Read the start of a PEM certificate's validity window (UTC)."), func(h *certHandle) time.Time { return NotBefore(h.cert) }})
 	w.RegisterScalar(&certTimestampScalar{"cert_not_after", "End of the certificate validity window (UTC)",
 		objectTags("Certificate Expiry Time",
 			"Return the end of the certificate's validity window (notAfter / expiry) as a UTC TIMESTAMP. Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
 			"Read the certificate expiry (`notAfter`, end of validity window, UTC).",
-			"not after, expiry, valid until, validity end, expiration, cert_not_after, x509, certificate", "cert.go"),
+			"not after, expiry, valid until, validity end, expiration, cert_not_after, x509, certificate"),
 		certExamples("cert_not_after", "Read the expiry (end of validity window) of a PEM certificate (UTC)."), func(h *certHandle) time.Time { return NotAfter(h.cert) }})
 
 	w.RegisterScalar(&certSANsScalar{})

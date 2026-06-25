@@ -39,7 +39,7 @@ func main() {
 		vgi.WithCatalogTags(map[string]string{
 			"source":       "vgi-x509",
 			"vgi.title":    "X.509 Certificate & TLS Inspection",
-			"vgi.keywords": "x509, certificate, tls, ssl, pem, der, fingerprint, subject, issuer, expiry, sans, certificate authority, security, compliance",
+			"vgi.keywords": x509worker.KeywordsJSON("x509, certificate, tls, ssl, pem, der, fingerprint, subject, issuer, expiry, sans, certificate authority, security, compliance"),
 			"vgi.doc_llm": "Defensive X.509 / TLS inspection toolkit over SQL. Parse a certificate " +
 				"(PEM text or DER bytes) and read its subject, issuer, serial, validity window, public-key and " +
 				"signature algorithms, SHA-256 fingerprint, CA flag, expiry status, and subject alternative " +
@@ -71,13 +71,14 @@ func main() {
 		vgi.WithSchemaTags(map[string]map[string]string{
 			"main": {
 				"vgi.title": "x509 — main",
-				"vgi.keywords": "x509, certificate, tls, ssl, pem, der, cert_subject, cert_issuer, cert_fingerprint, " +
-					"cert_sans, cert_info, tls_inspect, expiry, certificate authority",
+				"vgi.keywords": x509worker.KeywordsJSON("x509, certificate, tls, ssl, pem, der, cert_subject, cert_issuer, cert_fingerprint, " +
+					"cert_sans, cert_info, tls_inspect, expiry, certificate authority"),
 				// VGI123 classifying tags use BARE keys (NOT vgi.-namespaced).
-				"domain":         "security",
-				"category":       "parsing",
-				"topic":          "x509-certificates-and-tls",
-				"vgi.source_url": "https://github.com/Query-farm/vgi-x509/blob/main/internal/x509worker/functions.go",
+				"domain":   "security",
+				"category": "parsing",
+				"topic":    "x509-certificates-and-tls",
+				// Per-object vgi.source_url omitted (VGI139): provenance lives only on
+				// the catalog object via WithCatalogInfo.SourceURL.
 				"vgi.doc_llm": "X.509 certificate parsing and TLS inspection functions: read subject, " +
 					"issuer, serial, validity window, key/signature algorithms, SHA-256 fingerprint, CA flag, " +
 					"expiry status, and subject alternative names from a PEM/DER certificate; dump all fields in " +

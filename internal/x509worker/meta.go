@@ -2,37 +2,55 @@
 
 package x509worker
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 // Shared per-object discovery / description metadata for the vgi-lint strict
-// profile (0.26.0), which expects these tags on EVERY function and table:
+// profile, which expects these tags on EVERY function and table:
 //
-//   - vgi.title       (VGI124) — human-friendly display name
-//   - vgi.doc_llm     (VGI112) — Markdown narrative aimed at LLMs / agents
-//   - vgi.doc_md      (VGI113) — Markdown narrative for human docs
-//   - vgi.keywords    (VGI126) — comma-separated search terms / synonyms
-//   - vgi.source_url  (VGI128) — link to the implementing source file
+//   - vgi.title     (VGI124) — human-friendly display name
+//   - vgi.doc_llm   (VGI112) — Markdown narrative aimed at LLMs / agents
+//   - vgi.doc_md    (VGI113) — Markdown narrative for human docs
+//   - vgi.keywords  (VGI126/VGI138) — search terms / synonyms, encoded as a
+//     JSON array of strings (e.g. ["a","b"]), NOT a comma-separated string.
+//
+// Per-object vgi.source_url is intentionally NOT emitted (VGI139): the
+// source_url provenance lives only on the catalog object (WithCatalogInfo).
 //
 // objectTags(...) builds that map; extra per-object tags (e.g.
 // vgi.result_columns_md, vgi.executable_examples) are added by the caller.
 
-// sourceBase is the GitHub blob base for source files in this repo (pinned to
-// main). sourceURL(file) builds the canonical link for a single source file.
-const sourceBase = "https://github.com/Query-farm/vgi-x509/blob/main/internal/x509worker"
+// KeywordsJSON encodes a comma-separated keyword list as a JSON array of
+// strings (the form VGI138 requires for vgi.keywords). Surrounding whitespace
+// is trimmed and empty entries are dropped. Exported so the catalog/schema
+// keyword tags in cmd/ can reuse the same encoding.
+func KeywordsJSON(csv string) string { return keywordsJSON(csv) }
 
-// sourceURL builds the vgi.source_url for a file under internal/x509worker, e.g.
-// sourceURL("cert.go").
-func sourceURL(file string) string { return sourceBase + "/" + file }
+// keywordsJSON encodes a comma-separated keyword list as a JSON array of
+// strings (the form VGI138 requires for vgi.keywords). Surrounding whitespace
+// is trimmed and empty entries are dropped.
+func keywordsJSON(csv string) string {
+	parts := strings.Split(csv, ",")
+	kw := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if s := strings.TrimSpace(p); s != "" {
+			kw = append(kw, s)
+		}
+	}
+	return mustJSON(kw)
+}
 
-// objectTags builds the five standard per-object discovery/description tags.
-// relativeFile is the implementing file under internal/x509worker.
-func objectTags(title, docLLM, docMD, keywords, relativeFile string) map[string]string {
+// objectTags builds the standard per-object discovery/description tags. The
+// keywords argument is a comma-separated list; it is encoded as a JSON array
+// for the vgi.keywords tag (VGI138).
+func objectTags(title, docLLM, docMD, keywords string) map[string]string {
 	return map[string]string{
-		"vgi.title":      title,
-		"vgi.doc_llm":    docLLM,
-		"vgi.doc_md":     docMD,
-		"vgi.keywords":   keywords,
-		"vgi.source_url": sourceURL(relativeFile),
+		"vgi.title":    title,
+		"vgi.doc_llm":  docLLM,
+		"vgi.doc_md":   docMD,
+		"vgi.keywords": keywordsJSON(keywords),
 	}
 }
 

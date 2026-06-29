@@ -46,15 +46,47 @@ func main() {
 				"names; dump every certificate field in long format; and connect to a live TLS host:port " +
 				"(AUTHORIZED endpoints only) to return the presented certificate chain. Use to audit, triage, " +
 				"and report on certificates and TLS endpoints for security and compliance.",
-			"vgi.doc_md": "# x509\n\n" +
-				"Parse **X.509 certificates** and inspect **TLS endpoints**, exposed as DuckDB SQL functions. " +
-				"A defensive security / compliance tool.\n\n" +
-				"- Scalars: `cert_subject`, `cert_issuer`, `cert_serial`, `cert_key_algorithm`, " +
-				"`cert_signature_algorithm`, `cert_fingerprint`, `cert_is_expired`, `cert_is_ca`, " +
-				"`cert_not_before`, `cert_not_after`, `cert_sans` (offline certificate parsing).\n" +
-				"- Table functions: `cert_info` (long-format field dump), `tls_inspect` (live TLS chain, " +
-				"AUTHORIZED endpoints only).\n\n" +
-				"Certificate inputs accept PEM text (VARCHAR) or DER bytes (BLOB).",
+			"vgi.doc_md": "# X.509 Certificate & TLS Inspection for DuckDB\n\n" +
+				"**Parse X.509 certificates and inspect live TLS endpoints directly in SQL** — read subjects, " +
+				"issuers, validity windows, SHA-256 fingerprints, and subject alternative names (SANs) from PEM " +
+				"or DER certificates, and pull the certificate chain a TLS server presents, all without leaving " +
+				"DuckDB.\n\n" +
+				"This is a defensive security and compliance toolkit for anyone who works with certificates at " +
+				"scale: SREs auditing certificate expiry across a fleet, security engineers triaging TLS " +
+				"configurations, and compliance teams reporting on certificate authorities, key algorithms, and " +
+				"signature algorithms. Instead of shelling out to `openssl` and parsing text by hand, you query " +
+				"certificates and endpoints as ordinary SQL columns and rows, then filter, join, and aggregate " +
+				"them like any other DuckDB data.\n\n" +
+				"It is powered entirely by the Go standard library's battle-tested " +
+				"[`crypto/x509`](https://pkg.go.dev/crypto/x509) and " +
+				"[`crypto/tls`](https://pkg.go.dev/crypto/tls) packages — no third-party parsing code and no " +
+				"external services. The worker speaks the VGI protocol over Arrow, so DuckDB attaches it as a " +
+				"catalog and certificate parsing runs in-process at native speed. Certificate inputs are " +
+				"accepted as **PEM text** (`VARCHAR`) or **DER bytes** (`BLOB`); the format is sniffed from the " +
+				"content at runtime, so one query works for both.\n\n" +
+				"## Function surface\n\n" +
+				"Offline certificate scalars take a single PEM/DER certificate and return one field each: " +
+				"`cert_subject`, `cert_issuer`, `cert_serial`, `cert_key_algorithm`, " +
+				"`cert_signature_algorithm`, `cert_fingerprint` (SHA-256), `cert_is_expired`, `cert_is_ca`, " +
+				"`cert_not_before`, `cert_not_after`, and `cert_sans` (the list of subject alternative names). " +
+				"Two table functions go further: `cert_info(cert)` emits a long-format `(field, value)` dump of " +
+				"every attribute for ad-hoc inspection, and `tls_inspect(host_port, ...)` dials a live TLS " +
+				"endpoint and returns the full certificate chain it presents. **`tls_inspect` opens a network " +
+				"connection — use it against AUTHORIZED endpoints only.**\n\n" +
+				"## Example\n\n" +
+				"```sql\n" +
+				"-- Flag certificates that expire within 30 days\n" +
+				"SELECT cert_subject(pem), cert_not_after(pem)\n" +
+				"FROM certs\n" +
+				"WHERE cert_not_after(pem) < now() + INTERVAL 30 DAY;\n\n" +
+				"-- Inspect what a TLS endpoint serves (authorized hosts only)\n" +
+				"SELECT * FROM tls_inspect('example.com:443');\n" +
+				"```\n\n" +
+				"Learn more about the underlying library in the " +
+				"[Go `crypto/x509` documentation](https://pkg.go.dev/crypto/x509) and the " +
+				"[Go source on GitHub](https://github.com/golang/go/tree/master/src/crypto/x509). " +
+				"Source for this worker lives at " +
+				"[github.com/Query-farm/vgi-x509](https://github.com/Query-farm/vgi-x509).",
 			"vgi.author":             "Query.Farm",
 			"vgi.copyright":          "Copyright 2026 Query Farm LLC - https://query.farm",
 			"vgi.license":            "MIT",

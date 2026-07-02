@@ -64,15 +64,14 @@ func main() {
 				"catalog and certificate parsing runs in-process at native speed. Certificate inputs are " +
 				"accepted as **PEM text** (`VARCHAR`) or **DER bytes** (`BLOB`); the format is sniffed from the " +
 				"content at runtime, so one query works for both.\n\n" +
-				"## Function surface\n\n" +
-				"Offline certificate scalars take a single PEM/DER certificate and return one field each: " +
-				"`cert_subject`, `cert_issuer`, `cert_serial`, `cert_key_algorithm`, " +
-				"`cert_signature_algorithm`, `cert_fingerprint` (SHA-256), `cert_is_expired`, `cert_is_ca`, " +
-				"`cert_not_before`, `cert_not_after`, and `cert_sans` (the list of subject alternative names). " +
-				"Two table functions go further: `cert_info(cert)` emits a long-format `(field, value)` dump of " +
-				"every attribute for ad-hoc inspection, and `tls_inspect(host_port, ...)` dials a live TLS " +
-				"endpoint and returns the full certificate chain it presents. **`tls_inspect` opens a network " +
-				"connection — use it against AUTHORIZED endpoints only.**\n\n" +
+				"## When to reach for it\n\n" +
+				"Reach for this worker whenever certificates or TLS endpoints show up in your data and you want " +
+				"to treat them as structured columns rather than opaque blobs: auditing expiry windows across a " +
+				"fleet, pinning or comparing SHA-256 fingerprints, checking key and signature algorithms against " +
+				"a policy, expanding a certificate into a row per attribute for ad-hoc inspection, or pulling the " +
+				"chain a live server presents to confirm what it actually serves. Offline certificate parsing " +
+				"runs entirely in-process; live endpoint inspection **opens a network connection, so use it " +
+				"against AUTHORIZED endpoints only.** Discover the exact functions by listing the schema.\n\n" +
 				"## Example\n\n" +
 				"```sql\n" +
 				"-- Flag certificates that expire within 30 days\n" +
@@ -92,6 +91,8 @@ func main() {
 			"vgi.license":            "MIT",
 			"vgi.support_contact":    "https://github.com/Query-farm/vgi-x509/issues",
 			"vgi.support_policy_url": "https://github.com/Query-farm/vgi-x509/blob/main/README.md",
+			// VGI152 / VGI920: analyst tasks for `vgi-lint simulate` (all offline).
+			"vgi.agent_test_tasks": x509worker.AgentTestTasksJSON,
 		}),
 		vgi.WithCatalogInfo(vgi.CatalogInfo{
 			Name:      x509worker.CatalogName,
@@ -118,18 +119,19 @@ func main() {
 				"vgi.doc_md": "## x509.main\n\n" +
 					"Defensive **X.509 certificate** parsing and **TLS endpoint** inspection, " +
 					"exposed as DuckDB SQL functions over Apache Arrow.\n\n" +
-					"### Scalars (offline certificate parsing)\n\n" +
-					"`cert_subject`, `cert_issuer`, `cert_serial`, `cert_key_algorithm`, " +
-					"`cert_signature_algorithm`, `cert_fingerprint`, `cert_is_expired`, " +
-					"`cert_is_ca`, `cert_not_before`, `cert_not_after`, `cert_sans`.\n\n" +
-					"### Table functions\n\n" +
-					"- `cert_info(cert)` — long-format `(field, value)` dump of every attribute.\n" +
-					"- `tls_inspect(host_port, ...)` — connect to a live TLS endpoint " +
-					"(**AUTHORIZED endpoints only**) and return the presented certificate chain.\n\n" +
+					"### Two ways to work\n\n" +
+					"Scalar functions take one certificate and return a single field (subject, issuer, serial, " +
+					"key and signature algorithms, SHA-256 fingerprint, validity window, CA flag, or subject " +
+					"alternative names) — ideal for filtering, joining, and aggregating certificate columns. Table " +
+					"functions expand a certificate or endpoint into rows: one dumps every attribute of a " +
+					"certificate for ad-hoc inspection, the other connects to a live TLS endpoint " +
+					"(**AUTHORIZED endpoints only**) and returns the presented chain.\n\n" +
 					"### Usage\n\n" +
 					"Certificate inputs accept **PEM text** (`VARCHAR`) or **DER bytes** (`BLOB`); " +
 					"the content is sniffed at runtime. NULL certificate input yields NULL " +
-					"(scalars) or zero rows (`cert_info`).",
+					"(scalars) or zero rows. List the schema to discover the exact functions.",
+				// VGI413 category registry — each object tags a vgi.category naming one of these.
+				"vgi.categories": x509worker.CategoriesJSON,
 				// VGI506 representative example queries (catalog-qualified, executable).
 				"vgi.example_queries": x509worker.SchemaExampleQueries,
 			},

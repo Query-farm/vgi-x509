@@ -93,6 +93,18 @@ type executableExample struct {
 	SQL         string `json:"sql"`
 }
 
+// scalarExecExampleJSON builds a one-entry vgi.executable_examples payload for a
+// scalar that takes a single certificate argument. It embeds the committed
+// fixture PEM so the query runs as written (VGI509) and shows an agent the exact
+// canonical call for that function, which is what `vgi-lint simulate` needs to
+// converge on the reference solution (VGI920).
+func scalarExecExampleJSON(fn, desc string) string {
+	return mustJSON([]executableExample{{
+		Description: desc,
+		SQL:         "SELECT x509.main." + fn + "('" + fixturePEM + "') AS " + fn,
+	}})
+}
+
 // executableExamplesJSON is the JSON-encoded vgi.executable_examples payload: a
 // list of {"description","sql"} objects whose SQL is catalog-qualified
 // (x509.main.<fn>(...)) and self-contained (it embeds the fixture PEM), so every
@@ -152,6 +164,113 @@ var SchemaExampleQueries = "SELECT x509.main.cert_subject('" + fixturePEM + "');
 	"SELECT x509.main.cert_is_expired('" + fixturePEM + "');\n" +
 	"SELECT x509.main.cert_sans('" + fixturePEM + "');\n" +
 	"SELECT field, value FROM x509.main.cert_info('" + fixturePEM + "') ORDER BY field;"
+
+// Category names (VGI413): the schema declares a vgi.categories registry
+// (CategoriesJSON) and every object tags itself with a vgi.category naming one of
+// these entries. Categories drive the worker's navigation and listing sections.
+const (
+	// CategoryParsing groups the offline certificate functions (scalars + cert_info).
+	CategoryParsing = "Certificate parsing"
+	// CategoryTLS groups the live TLS-endpoint inspection (tls_inspect).
+	CategoryTLS = "TLS endpoints"
+)
+
+// category is one {name, description} entry in the vgi.categories registry.
+type category struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+// CategoriesJSON is the schema-level vgi.categories payload (VGI413): an ordered
+// JSON array of {name, description} objects. Each function/table tags itself with
+// a vgi.category naming one of these. Exported so the schema tags in cmd/ can
+// attach it.
+var CategoriesJSON = mustJSON([]category{
+	{
+		Name: CategoryParsing,
+		Description: "Parse a single X.509 certificate — supplied as PEM text or DER bytes — offline and read " +
+			"its fields: subject, issuer, serial, public-key and signature algorithms, SHA-256 fingerprint, " +
+			"validity window, CA flag, and subject alternative names, or dump every attribute as rows.",
+	},
+	{
+		Name: CategoryTLS,
+		Description: "Connect to a live TLS endpoint given as host:port (AUTHORIZED endpoints only) and return " +
+			"the certificate chain the server presents.",
+	},
+})
+
+// agentTestTask is one analyst task for `vgi-lint simulate` (VGI152 / VGI920):
+// a natural-language prompt and the reference SQL that answers it.
+type agentTestTask struct {
+	Name         string `json:"name"`
+	Prompt       string `json:"prompt"`
+	ReferenceSQL string `json:"reference_sql,omitempty"`
+}
+
+// AgentTestTasksJSON is the catalog-level vgi.agent_test_tasks payload (VGI152):
+// a JSON array of {name, prompt, reference_sql} tasks that `vgi-lint simulate`
+// uses to measure how well an agent actually drives this worker. Every task is
+// OFFLINE — each prompt embeds the committed fixture certificate so the agent can
+// answer with the offline cert-parsing functions, with no live TLS endpoint
+// needed to run the reference SQL. Exported so the catalog tags in cmd/ can
+// attach it.
+var AgentTestTasksJSON = mustJSON([]agentTestTask{
+	{
+		Name:         "certificate serial number",
+		Prompt:       "Return the serial number of this X.509 certificate as a single value, exactly as the worker reports it:\n" + fixturePEM,
+		ReferenceSQL: "SELECT x509.main.cert_serial('" + fixturePEM + "') AS serial",
+	},
+	{
+		Name:         "public-key algorithm",
+		Prompt:       "What public-key algorithm and size/curve does this certificate use? Return the single value the worker reports:\n" + fixturePEM,
+		ReferenceSQL: "SELECT x509.main.cert_key_algorithm('" + fixturePEM + "') AS key_algorithm",
+	},
+	{
+		Name:         "signature algorithm",
+		Prompt:       "What algorithm was used to sign this certificate? Return the single value the worker reports:\n" + fixturePEM,
+		ReferenceSQL: "SELECT x509.main.cert_signature_algorithm('" + fixturePEM + "') AS signature_algorithm",
+	},
+	{
+		Name:         "certificate fingerprint",
+		Prompt:       "Compute the SHA-256 fingerprint of this certificate as lowercase hex:\n" + fixturePEM,
+		ReferenceSQL: "SELECT x509.main.cert_fingerprint('" + fixturePEM + "') AS fingerprint",
+	},
+	{
+		Name:         "is a CA certificate",
+		Prompt:       "Is this certificate a certificate-authority (CA) certificate? Return a boolean:\n" + fixturePEM,
+		ReferenceSQL: "SELECT x509.main.cert_is_ca('" + fixturePEM + "') AS is_ca",
+	},
+	{
+		Name:         "certificate expiry check",
+		Prompt:       "Is this certificate currently expired (outside its validity window)? Return a boolean:\n" + fixturePEM,
+		ReferenceSQL: "SELECT x509.main.cert_is_expired('" + fixturePEM + "') AS is_expired",
+	},
+	{
+		Name:         "certificate expiry timestamp",
+		Prompt:       "When does this certificate expire? Return the end of its validity window as a timestamp:\n" + fixturePEM,
+		ReferenceSQL: "SELECT x509.main.cert_not_after('" + fixturePEM + "') AS not_after",
+	},
+	{
+		Name:         "certificate subject",
+		Prompt:       "Return the subject distinguished name of this X.509 certificate exactly as the worker reports it (do not reorder or reformat the string):\n" + fixturePEM,
+		ReferenceSQL: "SELECT x509.main.cert_subject('" + fixturePEM + "') AS subject",
+	},
+	{
+		Name:         "certificate issuer",
+		Prompt:       "Which certificate authority issued this certificate? Return the issuer distinguished name exactly as the worker reports it (do not reorder or reformat the string):\n" + fixturePEM,
+		ReferenceSQL: "SELECT x509.main.cert_issuer('" + fixturePEM + "') AS issuer",
+	},
+	{
+		Name:         "subject alternative names",
+		Prompt:       "Return the subject alternative names (DNS names and IP addresses) of this certificate as the single list value the worker reports:\n" + fixturePEM,
+		ReferenceSQL: "SELECT x509.main.cert_sans('" + fixturePEM + "') AS sans",
+	},
+	{
+		Name:         "dump all certificate fields",
+		Prompt:       "Dump every attribute of this certificate as (field, value) rows, ordered by field:\n" + fixturePEM,
+		ReferenceSQL: "SELECT field, value FROM x509.main.cert_info('" + fixturePEM + "') ORDER BY field",
+	},
+})
 
 // mustJSON marshals v to a compact JSON string, panicking on failure (the inputs
 // are static, so a failure is a programming error caught at startup).

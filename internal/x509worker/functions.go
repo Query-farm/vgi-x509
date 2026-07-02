@@ -105,7 +105,10 @@ func (f *certStringScalar) Metadata() vgi.FunctionMetadata {
 		ReturnType:  arrow.BinaryTypes.String,
 		Categories:  []string{"x509", "certificate"},
 		Examples:    f.examples,
-		Tags:        f.tags,
+		Tags: merge(f.tags, map[string]string{
+			"vgi.category":            CategoryParsing,
+			"vgi.executable_examples": scalarExecExampleJSON(f.name, f.desc),
+		}),
 	}
 }
 func (f *certStringScalar) ArgumentSpecs() []vgi.ArgSpec {
@@ -151,7 +154,10 @@ func (f *certBoolScalar) Metadata() vgi.FunctionMetadata {
 		ReturnType:  arrow.FixedWidthTypes.Boolean,
 		Categories:  []string{"x509", "certificate"},
 		Examples:    f.examples,
-		Tags:        f.tags,
+		Tags: merge(f.tags, map[string]string{
+			"vgi.category":            CategoryParsing,
+			"vgi.executable_examples": scalarExecExampleJSON(f.name, f.desc),
+		}),
 	}
 }
 func (f *certBoolScalar) ArgumentSpecs() []vgi.ArgSpec {
@@ -197,7 +203,10 @@ func (f *certTimestampScalar) Metadata() vgi.FunctionMetadata {
 		ReturnType:  tsType,
 		Categories:  []string{"x509", "certificate"},
 		Examples:    f.examples,
-		Tags:        f.tags,
+		Tags: merge(f.tags, map[string]string{
+			"vgi.category":            CategoryParsing,
+			"vgi.executable_examples": scalarExecExampleJSON(f.name, f.desc),
+		}),
 	}
 }
 func (f *certTimestampScalar) ArgumentSpecs() []vgi.ArgSpec {
@@ -254,6 +263,7 @@ func (f *certSANsScalar) Metadata() vgi.FunctionMetadata {
 	), map[string]string{
 		// VGI509: at least one object ships guaranteed-runnable executable examples.
 		"vgi.executable_examples": executableExamplesJSON,
+		"vgi.category":            CategoryParsing,
 	})
 	return vgi.FunctionMetadata{
 		Description: "Subject alternative names (DNS names + IP addresses) as a VARCHAR list",
@@ -398,6 +408,11 @@ func (f *certInfoFunc) Metadata() vgi.FunctionMetadata {
 				"|---|---|---|\n" +
 				"| `field` | VARCHAR | The certificate attribute name (e.g. `subject`, `issuer`, `serial`, `not_after`, `is_ca`). |\n" +
 				"| `value` | VARCHAR | The attribute's value rendered as text. |",
+			"vgi.category": CategoryParsing,
+			"vgi.executable_examples": mustJSON([]executableExample{{
+				Description: "Dump every attribute of a certificate as (field, value) rows, ordered by field.",
+				SQL:         "SELECT field, value FROM x509.main.cert_info('" + fixturePEM + "') ORDER BY field",
+			}}),
 		}),
 	}
 }
@@ -514,6 +529,7 @@ func (f *tlsInspectFunc) Metadata() vgi.FunctionMetadata {
 				"| `not_after` | TIMESTAMP | End of the certificate validity window (UTC). |\n" +
 				"| `is_ca` | BOOLEAN | Whether the certificate is a CA certificate. |\n" +
 				"| `fingerprint` | VARCHAR | SHA-256 fingerprint of the certificate (lowercase hex). |",
+			"vgi.category": CategoryTLS,
 		}),
 	}
 }

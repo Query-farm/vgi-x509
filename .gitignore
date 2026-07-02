@@ -14,3 +14,6 @@ coverage.out
 # Editor / OS cruft
 .DS_Store
 /.tmpbin/
+
+# vgi-lint verdict/review caches (written by `vgi-lint lint --ai` / `simulate`)
+/.vgi-*-cache.json

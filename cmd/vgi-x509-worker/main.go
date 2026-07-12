@@ -72,15 +72,16 @@ func main() {
 				"chain a live server presents to confirm what it actually serves. Offline certificate parsing " +
 				"runs entirely in-process; live endpoint inspection **opens a network connection, so use it " +
 				"against AUTHORIZED endpoints only.** Discover the exact functions by listing the schema.\n\n" +
-				"## Example\n\n" +
-				"```sql\n" +
-				"-- Flag certificates that expire within 30 days\n" +
-				"SELECT cert_subject(pem), cert_not_after(pem)\n" +
-				"FROM certs\n" +
-				"WHERE cert_not_after(pem) < now() + INTERVAL 30 DAY;\n\n" +
-				"-- Inspect what a TLS endpoint serves (authorized hosts only)\n" +
-				"SELECT * FROM tls_inspect('example.com:443');\n" +
-				"```\n\n" +
+				"## Typical uses\n\n" +
+				"A few patterns recur. To flag soon-to-expire certificates, apply `cert_not_after` to a " +
+				"column of PEM or DER certificates and keep the rows whose expiry falls inside your renewal " +
+				"window, reporting each certificate's `cert_subject` alongside. To audit cryptographic " +
+				"hygiene across a fleet, group a certificate table by `cert_key_algorithm` and " +
+				"`cert_signature_algorithm` and count the weak ones. To confirm what a server actually " +
+				"serves, call the `tls_inspect` table function on an **authorized** `host:port` and read " +
+				"back the presented chain. Browse the `cert_fields` registry view to discover every " +
+				"attribute the worker can read and the scalar that returns each; ready-to-run, fully " +
+				"qualified statements live in the `x509.main` schema's example queries.\n\n" +
 				"Learn more about the underlying library in the " +
 				"[Go `crypto/x509` documentation](https://pkg.go.dev/crypto/x509) and the " +
 				"[Go source on GitHub](https://github.com/golang/go/tree/master/src/crypto/x509). " +

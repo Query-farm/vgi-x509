@@ -199,12 +199,22 @@ var CategoriesJSON = mustJSON([]category{
 	},
 })
 
-// agentTestTask is one analyst task for `vgi-lint simulate` (VGI152 / VGI920):
-// a natural-language prompt and the reference SQL that answers it.
+// agentTestTask is one analyst task for `vgi-lint simulate` (VGI152 / VGI920): a
+// natural-language prompt plus a grader-only oracle. Deterministic, offline tasks
+// use ReferenceSQL (exact result compare). Live tasks (tls_inspect, whose output
+// is a real server certificate that rotates) instead use CheckSQL — a post-session
+// boolean assertion of a STABLE fact — so grading cannot flake on cert rotation
+// (the reference/check fields are grader-only and never shown to the analyst).
 type agentTestTask struct {
 	Name         string `json:"name"`
 	Prompt       string `json:"prompt"`
 	ReferenceSQL string `json:"reference_sql,omitempty"`
+	// CheckSQL is a grader-only post-session assertion (VGI920 tier 2): it passes
+	// when its first row/column is truthy. Used for live-data tasks where an exact
+	// reference compare would be a flake.
+	CheckSQL string `json:"check_sql,omitempty"`
+	// IgnoreColumnNames relaxes the reference compare to values-only.
+	IgnoreColumnNames bool `json:"ignore_column_names,omitempty"`
 }
 
 // AgentTestTasksJSON is the catalog-level vgi.agent_test_tasks payload (VGI152):
@@ -216,54 +226,102 @@ type agentTestTask struct {
 // attach it.
 var AgentTestTasksJSON = mustJSON([]agentTestTask{
 	{
-		Name:         "certificate serial number",
-		Prompt:       "Return the serial number of this X.509 certificate as a single value, exactly as the worker reports it:\n" + fixturePEM,
-		ReferenceSQL: "SELECT x509.main.cert_serial('" + fixturePEM + "') AS serial",
+		Name:              "certificate serial number",
+		Prompt:            "Return the serial number of this X.509 certificate as a single value, exactly as the worker reports it:\n" + fixturePEM,
+		ReferenceSQL:      "SELECT x509.main.cert_serial('" + fixturePEM + "') AS serial",
+		IgnoreColumnNames: true,
 	},
 	{
-		Name:         "public-key algorithm",
-		Prompt:       "What public-key algorithm and size/curve does this certificate use? Return the single value the worker reports:\n" + fixturePEM,
-		ReferenceSQL: "SELECT x509.main.cert_key_algorithm('" + fixturePEM + "') AS key_algorithm",
+		// Reframed as a yes/no predicate over the worker's own output so grading
+		// cannot flake on how the analyst spells or aliases the algorithm string
+		// (e.g. "ECDSA" vs "ECDSA-P256" vs a renamed column). The fixture key is
+		// ECDSA on NIST P-256, so cert_key_algorithm returns exactly 'ECDSA-P256'.
+		Name:              "public-key algorithm is ECDSA P-256",
+		Prompt:            "Does this certificate use an ECDSA key on the NIST P-256 curve? Return a single boolean.\n" + fixturePEM,
+		ReferenceSQL:      "SELECT x509.main.cert_key_algorithm('" + fixturePEM + "') = 'ECDSA-P256' AS is_ecdsa_p256",
+		IgnoreColumnNames: true,
 	},
 	{
-		Name:         "signature algorithm",
-		Prompt:       "What algorithm was used to sign this certificate? Return the single value the worker reports:\n" + fixturePEM,
-		ReferenceSQL: "SELECT x509.main.cert_signature_algorithm('" + fixturePEM + "') AS signature_algorithm",
+		Name:              "signature algorithm",
+		Prompt:            "What algorithm was used to sign this certificate? Return the single value the worker reports:\n" + fixturePEM,
+		ReferenceSQL:      "SELECT x509.main.cert_signature_algorithm('" + fixturePEM + "') AS signature_algorithm",
+		IgnoreColumnNames: true,
 	},
 	{
-		Name:         "certificate fingerprint",
-		Prompt:       "Compute the SHA-256 fingerprint of this certificate as lowercase hex:\n" + fixturePEM,
-		ReferenceSQL: "SELECT x509.main.cert_fingerprint('" + fixturePEM + "') AS fingerprint",
+		Name:              "certificate fingerprint",
+		Prompt:            "Compute the SHA-256 fingerprint of this certificate as lowercase hex:\n" + fixturePEM,
+		ReferenceSQL:      "SELECT x509.main.cert_fingerprint('" + fixturePEM + "') AS fingerprint",
+		IgnoreColumnNames: true,
 	},
 	{
-		Name:         "is a CA certificate",
-		Prompt:       "Is this certificate a certificate-authority (CA) certificate? Return a boolean:\n" + fixturePEM,
-		ReferenceSQL: "SELECT x509.main.cert_is_ca('" + fixturePEM + "') AS is_ca",
+		Name:              "is a CA certificate",
+		Prompt:            "Is this certificate a certificate-authority (CA) certificate? Return a boolean:\n" + fixturePEM,
+		ReferenceSQL:      "SELECT x509.main.cert_is_ca('" + fixturePEM + "') AS is_ca",
+		IgnoreColumnNames: true,
 	},
 	{
-		Name:         "certificate expiry check",
-		Prompt:       "Is this certificate currently expired (outside its validity window)? Return a boolean:\n" + fixturePEM,
-		ReferenceSQL: "SELECT x509.main.cert_is_expired('" + fixturePEM + "') AS is_expired",
+		Name:              "certificate expiry check",
+		Prompt:            "Is this certificate currently expired (outside its validity window)? Return a boolean:\n" + fixturePEM,
+		ReferenceSQL:      "SELECT x509.main.cert_is_expired('" + fixturePEM + "') AS is_expired",
+		IgnoreColumnNames: true,
 	},
 	{
-		Name:         "certificate expiry timestamp",
-		Prompt:       "When does this certificate expire? Return the end of its validity window as a timestamp:\n" + fixturePEM,
-		ReferenceSQL: "SELECT x509.main.cert_not_after('" + fixturePEM + "') AS not_after",
+		Name:              "certificate expiry timestamp",
+		Prompt:            "When does this certificate expire? Return the end of its validity window as a timestamp:\n" + fixturePEM,
+		ReferenceSQL:      "SELECT x509.main.cert_not_after('" + fixturePEM + "') AS not_after",
+		IgnoreColumnNames: true,
 	},
 	{
-		Name:         "certificate subject",
-		Prompt:       "Return the subject distinguished name of this X.509 certificate exactly as the worker reports it (do not reorder or reformat the string):\n" + fixturePEM,
-		ReferenceSQL: "SELECT x509.main.cert_subject('" + fixturePEM + "') AS subject",
+		Name:              "certificate valid-from timestamp",
+		Prompt:            "When does this certificate become valid? Return the start of its validity window (notBefore) as a single timestamp:\n" + fixturePEM,
+		ReferenceSQL:      "SELECT x509.main.cert_not_before('" + fixturePEM + "') AS not_before",
+		IgnoreColumnNames: true,
 	},
 	{
-		Name:         "certificate issuer",
-		Prompt:       "Which certificate authority issued this certificate? Return the issuer distinguished name exactly as the worker reports it (do not reorder or reformat the string):\n" + fixturePEM,
-		ReferenceSQL: "SELECT x509.main.cert_issuer('" + fixturePEM + "') AS issuer",
+		Name: "boolean-valued certificate fields",
+		Prompt: "This worker exposes a browsable registry of every certificate attribute it can read and the scalar function that returns each one. " +
+			"Using that registry, list the fields whose result type is BOOLEAN together with the scalar function that returns them, ordered by field name.",
+		ReferenceSQL: "SELECT field, scalar_function FROM x509.main." + CertFieldsViewName + " WHERE result_type = 'BOOLEAN' ORDER BY field",
 	},
 	{
-		Name:         "subject alternative names",
-		Prompt:       "Return the subject alternative names (DNS names and IP addresses) of this certificate as the single list value the worker reports:\n" + fixturePEM,
-		ReferenceSQL: "SELECT x509.main.cert_sans('" + fixturePEM + "') AS sans",
+		// tls_inspect connects to a LIVE endpoint whose certificate rotates, so an
+		// exact reference compare would be a latent flake. Grade instead via a
+		// CheckSQL assertion of a stable fact: the leaf certificate (seq 0) a TLS
+		// server presents is never itself a CA certificate. example.com is an
+		// IANA-operated, long-stable endpoint used only for this defensive probe.
+		Name: "live TLS endpoint leaf certificate",
+		Prompt: "Connect to the live TLS endpoint example.com:443 and inspect the certificate chain it presents. " +
+			"Is the leaf certificate — the one at sequence 0 — itself a certificate-authority (CA) certificate? Return a single boolean.",
+		CheckSQL: "SELECT bool_and(NOT is_ca) FROM x509.main.tls_inspect('example.com:443') WHERE seq = 0",
+	},
+	{
+		// Reframed as a yes/no predicate over the worker's own cert_subject output:
+		// asking the analyst to reproduce a distinguished-name string verbatim is a
+		// latent flake because an agent reorders or reformats the RDN components. The
+		// fixture subject is CN=test.vgi-x509.example,O=VGI X509 Fixture, so its
+		// distinguished name contains the host name test.vgi-x509.example.
+		Name:              "certificate subject names the expected host",
+		Prompt:            "Does the subject of this certificate name the host test.vgi-x509.example (i.e. its subject distinguished name contains that name)? Return a single boolean.\n" + fixturePEM,
+		ReferenceSQL:      "SELECT x509.main.cert_subject('" + fixturePEM + "') LIKE '%test.vgi-x509.example%' AS subject_names_host",
+		IgnoreColumnNames: true,
+	},
+	{
+		// Reframed as a boolean self-issued check for the same reason as the subject
+		// task. The fixture is self-signed, so its issuer distinguished name equals
+		// its subject distinguished name.
+		Name:              "certificate is self-issued",
+		Prompt:            "Is this certificate self-issued — that is, does its issuer distinguished name equal its subject distinguished name? Return a single boolean.\n" + fixturePEM,
+		ReferenceSQL:      "SELECT x509.main.cert_issuer('" + fixturePEM + "') = x509.main.cert_subject('" + fixturePEM + "') AS self_issued",
+		IgnoreColumnNames: true,
+	},
+	{
+		// Reframed as a set-membership predicate: returning a whole list value verbatim
+		// is a latent flake (the analyst may unnest it to rows or reorder it). The
+		// fixture's subject alternative names include the DNS name alt.vgi-x509.example.
+		Name:              "subject alternative names include alt host",
+		Prompt:            "Is alt.vgi-x509.example one of this certificate's subject alternative names (SANs)? Return a single boolean.\n" + fixturePEM,
+		ReferenceSQL:      "SELECT list_contains(x509.main.cert_sans('" + fixturePEM + "'), 'alt.vgi-x509.example') AS has_san",
+		IgnoreColumnNames: true,
 	},
 	{
 		Name:         "dump all certificate fields",
@@ -271,6 +329,78 @@ var AgentTestTasksJSON = mustJSON([]agentTestTask{
 		ReferenceSQL: "SELECT field, value FROM x509.main.cert_info('" + fixturePEM + "') ORDER BY field",
 	},
 })
+
+// resultColumn is one {name, type, description} entry in a table function's
+// vgi.result_columns_schema (VGI307): the structured, machine-readable declaration
+// of a static result column. It replaces the retired free-text vgi.result_columns_md
+// (VGI414 / VGI405).
+type resultColumn struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+}
+
+// resultColumnsSchemaJSON encodes the given columns as the vgi.result_columns_schema
+// tag payload: a JSON array of {name, type, description} objects, one per column.
+func resultColumnsSchemaJSON(cols ...resultColumn) string { return mustJSON(cols) }
+
+// ---------------------------------------------------------------------------
+// cert_fields browsable registry (VGI146).
+//
+// A worker with only table functions and no browsable table/view forces an agent
+// to guess arguments before it can see any data. The cert_fields VIEW is a
+// curated, VALUES-backed registry (no network, no credential — so it also clears
+// the VGI911 scan probe for free) that maps every attribute cert_info emits to the
+// scalar function that returns it and that value's DuckDB type. Browsing it teaches
+// an agent the worker's whole certificate surface without parsing a cert first.
+// ---------------------------------------------------------------------------
+
+// certField is one row of the cert_fields registry.
+type certField struct {
+	Field      string // attribute name, matching internal/x509worker/info.go CertInfo
+	Scalar     string // the scalar function that returns this field individually
+	ResultType string // DuckDB type of that scalar's result
+	Desc       string // human description
+}
+
+// certFieldRegistry is the ordered attribute set, kept in lockstep with CertInfo
+// (info.go) and the scalars registered in functions.go Register — so the browsable
+// view and the cert_info dump cannot drift.
+var certFieldRegistry = []certField{
+	{"subject", "cert_subject", "VARCHAR", "Subject distinguished name (RFC 2253)."},
+	{"issuer", "cert_issuer", "VARCHAR", "Issuer distinguished name of the signing CA (RFC 2253)."},
+	{"serial", "cert_serial", "VARCHAR", "Serial number as a decimal string."},
+	{"not_before", "cert_not_before", "TIMESTAMP", "Start of the validity window (UTC)."},
+	{"not_after", "cert_not_after", "TIMESTAMP", "End of the validity window / expiry (UTC)."},
+	{"is_expired", "cert_is_expired", "BOOLEAN", "Whether the certificate is outside its validity window right now."},
+	{"key_algorithm", "cert_key_algorithm", "VARCHAR", "Public-key algorithm with size or curve (e.g. RSA-2048, ECDSA-P256)."},
+	{"signature_algorithm", "cert_signature_algorithm", "VARCHAR", "Algorithm used to sign the certificate (e.g. ECDSA-SHA256)."},
+	{"fingerprint_sha256", "cert_fingerprint", "VARCHAR", "SHA-256 fingerprint of the DER encoding (lowercase hex)."},
+	{"is_ca", "cert_is_ca", "BOOLEAN", "Whether the certificate is a certificate-authority (CA) certificate."},
+	{"sans", "cert_sans", "VARCHAR[]", "Subject alternative names: DNS names then IP addresses."},
+}
+
+// CertFieldsViewName is the name of the browsable certificate-field registry view.
+const CertFieldsViewName = "cert_fields"
+
+// sqlStr renders s as a single-quoted SQL string literal (doubling embedded quotes).
+func sqlStr(s string) string { return "'" + strings.ReplaceAll(s, "'", "''") + "'" }
+
+// CertFieldsViewDefinition builds the SQL backing the cert_fields view: a
+// VALUES-backed scan (credential-free, no network). Columns: field,
+// scalar_function, result_type, description.
+func CertFieldsViewDefinition() string {
+	var b strings.Builder
+	b.WriteString("SELECT * FROM (VALUES ")
+	for i, f := range certFieldRegistry {
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		b.WriteString("(" + sqlStr(f.Field) + ", " + sqlStr(f.Scalar) + ", " + sqlStr(f.ResultType) + ", " + sqlStr(f.Desc) + ")")
+	}
+	b.WriteString(") AS t(field, scalar_function, result_type, description)")
+	return b.String()
+}
 
 // mustJSON marshals v to a compact JSON string, panicking on failure (the inputs
 // are static, so a failure is a programming error caught at startup).

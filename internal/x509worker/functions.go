@@ -389,8 +389,9 @@ func (f *certInfoFunc) Metadata() vgi.FunctionMetadata {
 		Categories:  []string{"x509", "certificate"},
 		Examples: []vgi.CatalogExample{
 			{
-				SQL:         "SELECT * FROM x509.main.cert_info('" + fixturePEM + "');",
-				Description: "Dump every attribute of a PEM certificate as (field, value) rows.",
+				SQL: "SELECT field, value FROM x509.main.cert_info('" + fixturePEM + "') " +
+					"WHERE field IN ('subject', 'issuer', 'not_after', 'is_ca') ORDER BY field;",
+				Description: "Pick the identity and trust-relevant attributes (subject, issuer, expiry, CA flag) from a certificate.",
 			},
 		},
 		Tags: merge(objectTags(
@@ -404,10 +405,12 @@ func (f *certInfoFunc) Metadata() vgi.FunctionMetadata {
 			"cert info, certificate fields, dump, inspect certificate, attributes, long format, "+
 				"cert_info, x509, certificate",
 		), map[string]string{
-			"vgi.result_columns_md": "| column | type | description |\n" +
-				"|---|---|---|\n" +
-				"| `field` | VARCHAR | The certificate attribute name (e.g. `subject`, `issuer`, `serial`, `not_after`, `is_ca`). |\n" +
-				"| `value` | VARCHAR | The attribute's value rendered as text. |",
+			// VGI307 / VGI414: structured static result schema (replaces the retired
+			// free-text vgi.result_columns_md).
+			"vgi.result_columns_schema": resultColumnsSchemaJSON(
+				resultColumn{"field", "VARCHAR", "The certificate attribute name (e.g. subject, issuer, serial, not_after, is_ca)."},
+				resultColumn{"value", "VARCHAR", "The attribute's value rendered as text."},
+			),
 			"vgi.category": CategoryParsing,
 			"vgi.executable_examples": mustJSON([]executableExample{{
 				Description: "Dump every attribute of a certificate as (field, value) rows, ordered by field.",
@@ -503,8 +506,9 @@ func (f *tlsInspectFunc) Metadata() vgi.FunctionMetadata {
 		Categories:  []string{"x509", "tls"},
 		Examples: []vgi.CatalogExample{
 			{
-				SQL:         "SELECT * FROM x509.main.tls_inspect('example.com:443');",
-				Description: "Connect to a TLS endpoint (AUTHORIZED endpoints only) and return the presented certificate chain.",
+				SQL: "SELECT seq, subject, issuer, is_ca FROM x509.main.tls_inspect('example.com:443') " +
+					"WHERE seq = 0;",
+				Description: "Inspect the leaf certificate a TLS endpoint presents (AUTHORIZED endpoints only): its subject, issuer, and CA flag.",
 			},
 		},
 		Tags: merge(objectTags(
@@ -520,15 +524,17 @@ func (f *tlsInspectFunc) Metadata() vgi.FunctionMetadata {
 			"tls, tls inspect, certificate chain, handshake, endpoint, host port, sni, "+
 				"tls_inspect, x509, server certificate",
 		), map[string]string{
-			"vgi.result_columns_md": "| column | type | description |\n" +
-				"|---|---|---|\n" +
-				"| `seq` | INTEGER | Position in the presented chain (0 = leaf/server certificate). |\n" +
-				"| `subject` | VARCHAR | Certificate subject as an RFC 2253 distinguished name. |\n" +
-				"| `issuer` | VARCHAR | Certificate issuer as an RFC 2253 distinguished name. |\n" +
-				"| `not_before` | TIMESTAMP | Start of the certificate validity window (UTC). |\n" +
-				"| `not_after` | TIMESTAMP | End of the certificate validity window (UTC). |\n" +
-				"| `is_ca` | BOOLEAN | Whether the certificate is a CA certificate. |\n" +
-				"| `fingerprint` | VARCHAR | SHA-256 fingerprint of the certificate (lowercase hex). |",
+			// VGI307 / VGI414: structured static result schema (replaces the retired
+			// free-text vgi.result_columns_md).
+			"vgi.result_columns_schema": resultColumnsSchemaJSON(
+				resultColumn{"seq", "INTEGER", "Position in the presented chain (0 = leaf/server certificate)."},
+				resultColumn{"subject", "VARCHAR", "Certificate subject as an RFC 2253 distinguished name."},
+				resultColumn{"issuer", "VARCHAR", "Certificate issuer as an RFC 2253 distinguished name."},
+				resultColumn{"not_before", "TIMESTAMP", "Start of the certificate validity window (UTC)."},
+				resultColumn{"not_after", "TIMESTAMP", "End of the certificate validity window (UTC)."},
+				resultColumn{"is_ca", "BOOLEAN", "Whether the certificate is a CA certificate."},
+				resultColumn{"fingerprint", "VARCHAR", "SHA-256 fingerprint of the certificate (lowercase hex)."},
+			),
 			"vgi.category": CategoryTLS,
 		}),
 	}
@@ -653,18 +659,40 @@ func Register(w *vgi.Worker) {
 			"Read the certificate serial number as a decimal string.",
 			"serial, serial number, cert_serial, identifier, x509, certificate"),
 		certExamples("cert_serial", "Read the serial number of a PEM certificate as a decimal string."), func(h *certHandle) string { return Serial(h.cert) }})
-	w.RegisterScalar(&certStringScalar{"cert_key_algorithm", "Public-key algorithm with size/curve (e.g. RSA-2048, ECDSA-P256)",
+	w.RegisterScalar(&certStringScalar{"cert_key_algorithm", "Public-key algorithm with size/curve (e.g. RSA-2048, ECDSA-P256, Ed25519)",
 		objectTags("Certificate Public-Key Algorithm",
-			"Return the certificate's public-key algorithm with its size or curve, e.g. RSA-2048 or ECDSA-P256. Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
-			"Read the public-key algorithm and size/curve, e.g. `RSA-2048` or `ECDSA-P256`.",
-			"key algorithm, public key, rsa, ecdsa, ed25519, curve, key size, cert_key_algorithm, x509, certificate"),
-		certExamples("cert_key_algorithm", "Read the public-key algorithm and size/curve of a PEM certificate."), func(h *certHandle) string { return KeyAlgorithm(h.cert) }})
-	w.RegisterScalar(&certStringScalar{"cert_signature_algorithm", "Certificate signature algorithm",
+			"Return the certificate's subject public-key algorithm together with its key size or curve, as a "+
+				"VARCHAR built by this worker (not Go's bare algorithm name). The value follows a fixed "+
+				"convention: RSA keys render as `RSA-<bits>` where <bits> is the modulus size, typically "+
+				"`RSA-2048`, `RSA-3072` or `RSA-4096`; ECDSA keys render as `ECDSA-<curve>` with the curve "+
+				"name stripped of its hyphen, i.e. `ECDSA-P256`, `ECDSA-P384`, `ECDSA-P521`; Edwards keys "+
+				"render as the single token `Ed25519`. Any other key type falls back to Go's public-key "+
+				"algorithm name (e.g. `DSA`). For a security audit, RSA moduli below 2048 bits are considered "+
+				"weak. Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL. Example: the "+
+				"committed fixture certificate carries a P-256 ECDSA key and returns `ECDSA-P256`.",
+			"Read the public-key algorithm with its size or curve: `RSA-<bits>` (e.g. `RSA-2048`), "+
+				"`ECDSA-<curve>` (e.g. `ECDSA-P256`), or `Ed25519`. RSA moduli under 2048 bits are weak.",
+			"key algorithm, public key, rsa, ecdsa, ed25519, curve, key size, key strength, cert_key_algorithm, x509, certificate"),
+		certExamples("cert_key_algorithm", "Read the public-key algorithm and size/curve of a PEM certificate (the fixture returns ECDSA-P256)."), func(h *certHandle) string { return KeyAlgorithm(h.cert) }})
+	w.RegisterScalar(&certStringScalar{"cert_signature_algorithm", "Certificate signature algorithm (Go crypto/x509 canonical name, e.g. ECDSA-SHA256)",
 		objectTags("Certificate Signature Algorithm",
-			"Return the algorithm used to sign the certificate, e.g. ECDSA-SHA256 or SHA256-RSA. Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
-			"Read the certificate signature algorithm, e.g. `ECDSA-SHA256`.",
-			"signature algorithm, signing algorithm, sha256, ecdsa, rsa, cert_signature_algorithm, x509, certificate"),
-		certExamples("cert_signature_algorithm", "Read the signature algorithm of a PEM certificate."), func(h *certHandle) string { return SignatureAlgorithm(h.cert) }})
+			"Return the algorithm the issuing CA used to sign this certificate, as a VARCHAR. The value is Go "+
+				"crypto/x509's canonical name for the algorithm and is drawn from a fixed vocabulary: for RSA "+
+				"PKCS#1 v1.5, `SHA256-RSA`, `SHA384-RSA`, `SHA512-RSA` (and the legacy `SHA1-RSA`, `MD5-RSA`, "+
+				"`MD2-RSA`); for RSA-PSS, `SHA256-RSAPSS`, `SHA384-RSAPSS`, `SHA512-RSAPSS`; for ECDSA, "+
+				"`ECDSA-SHA256`, `ECDSA-SHA384`, `ECDSA-SHA512` (and legacy `ECDSA-SHA1`); for DSA, `DSA-SHA1`, "+
+				"`DSA-SHA256`; and the single-token `Ed25519`. An unrecognized OID yields `Unknown Signature "+
+				"Algorithm`. Note the ordering convention differs by family — RSA/DSA render as hash-then-key "+
+				"(`SHA256-RSA`) while ECDSA renders as key-then-hash (`ECDSA-SHA256`) — so match on the whole "+
+				"token, not a positional split. For a security audit, the SHA-1, MD5 and MD2 variants are "+
+				"considered weak/deprecated and are the ones worth flagging. Accepts PEM text (VARCHAR) or DER "+
+				"bytes (BLOB); NULL input yields NULL. Example: the committed fixture certificate is P-256 "+
+				"ECDSA and returns `ECDSA-SHA256`.",
+			"Read the certificate signature algorithm as Go crypto/x509's canonical name (e.g. `ECDSA-SHA256`, "+
+				"`SHA256-RSA`, `Ed25519`). The value comes from a fixed vocabulary; the SHA-1/MD5/MD2 variants "+
+				"are weak and worth flagging in an audit.",
+			"signature algorithm, signing algorithm, sha256, sha1, weak signature, ecdsa, rsa, rsapss, ed25519, cert_signature_algorithm, x509, certificate"),
+		certExamples("cert_signature_algorithm", "Read the signature algorithm of a PEM certificate (the fixture returns ECDSA-SHA256)."), func(h *certHandle) string { return SignatureAlgorithm(h.cert) }})
 	w.RegisterScalar(&certStringScalar{"cert_fingerprint", "SHA-256 fingerprint of the certificate (lowercase hex)",
 		objectTags("Certificate SHA-256 Fingerprint",
 			"Return the SHA-256 fingerprint of the certificate's DER encoding as lowercase hex. Use it to uniquely identify or pin a certificate. Accepts PEM text (VARCHAR) or DER bytes (BLOB); NULL input yields NULL.",
@@ -702,4 +730,49 @@ func Register(w *vgi.Worker) {
 
 	w.RegisterTable(vgi.AsTableFunction[certInfoState](&certInfoFunc{}))
 	w.RegisterTable(vgi.AsTableFunction[tlsInspectState](&tlsInspectFunc{}))
+
+	registerCertFieldsView(w)
+}
+
+// registerCertFieldsView registers the cert_fields browsable registry view
+// (VGI146): a curated, VALUES-backed table (credential-free, no network, so it
+// clears the VGI911 scan probe for free) mapping every certificate attribute
+// cert_info emits to the scalar function that returns it and that value's DuckDB
+// type. It gives an agent something to browse before it has parsed a certificate.
+func registerCertFieldsView(w *vgi.Worker) {
+	tags := merge(objectTags(
+		"Certificate Field Registry",
+		"A browsable registry of every certificate attribute this worker can read: each row maps a "+
+			"field name (the same field cert_info emits) to the scalar function that returns it and to "+
+			"that value's DuckDB result type. Query it to discover the worker's certificate surface "+
+			"without first parsing a certificate blob.",
+		"A browsable registry mapping each certificate attribute to the scalar function that returns "+
+			"it and that value's DuckDB type. Columns: `field`, `scalar_function`, `result_type`, "+
+			"`description`.",
+		"cert fields, registry, catalog, field list, scalar functions, discover, reference, "+
+			"cert_fields, x509, certificate",
+	), map[string]string{
+		"vgi.category": CategoryParsing,
+		// VGI123 classifying tags (bare keys, reused vocabulary shared with the schema).
+		"domain": "security",
+		"topic":  "x509-certificates-and-tls",
+		// VGI511 demonstration + VGI514 (analytical, not a bare SELECT *): object-level
+		// vgi.example_queries is a JSON array of {description, sql}.
+		"vgi.example_queries": mustJSON([]executableExample{{
+			Description: "List the certificate fields whose scalar function returns a BOOLEAN, with the function name.",
+			SQL:         "SELECT field, scalar_function FROM x509.main." + CertFieldsViewName + " WHERE result_type = 'BOOLEAN' ORDER BY field",
+		}}),
+	})
+	w.RegisterCatalogView("main", vgi.CatalogView{
+		Name:       CertFieldsViewName,
+		Definition: CertFieldsViewDefinition(),
+		Comment:    "Registry of certificate attributes: each field, the scalar function that returns it, and its result type.",
+		Tags:       tags,
+		ColumnComments: map[string]string{
+			"field":           "Certificate attribute name (matches the field column of cert_info).",
+			"scalar_function": "The scalar function that returns this field for a single certificate.",
+			"result_type":     "DuckDB type of that scalar function's result.",
+			"description":     "Human description of the attribute.",
+		},
+	})
 }

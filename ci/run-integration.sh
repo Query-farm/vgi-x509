@@ -32,6 +32,17 @@
 # Optional:
 #   TRANSPORT          subprocess (default) | http | unix
 #   STAGE              scratch dir for the preprocessed test tree (default: mktemp)
+#   TEST_PATTERN       glob of .test files to run (default: test/sql/*). Narrow
+#                      it (e.g. test/sql/cert_offline.test) to smoke a single
+#                      OFFLINE file — used by the Docker image_test.
+#   SKIP_MOCK          when non-empty, do NOT build/start the mock TLS server
+#                      (and do not set VGI_X509_TEST_ADDR). tls_inspect.test
+#                      require-env-SKIPs itself, so only the offline files run.
+#                      Used by the Docker image_test, where Go and a reachable
+#                      mock backend are not available.
+#   For TRANSPORT=http, if VGI_X509_WORKER is ALREADY an http(s):// URL it is
+#   treated as a PRE-LAUNCHED endpoint (e.g. a warm container) and used as-is,
+#   instead of spawning `<binary> --http`. All defaults are unchanged.
 set -euo pipefail
 
 : "${HAYBARN_UNITTEST:?path to the haybarn-unittest binary}"
@@ -46,6 +57,7 @@ esac
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 STAGE="${STAGE:-$(mktemp -d)}"
+TEST_PATTERN="${TEST_PATTERN:-test/sql/*}"
 
 # The worker binary the subprocess transport ATTACHes to is also the binary we
 # launch out-of-band for http/unix. Capture it before we possibly overwrite
@@ -66,27 +78,33 @@ cleanup() {
 trap cleanup EXIT
 
 # --- Start the mock TLS server (the .test files inspect it; all transports) ---
-MOCK_BIN="$STAGE/mockserver"
-echo "Building mock TLS server ..."
-( cd "$REPO" && go build -o "$MOCK_BIN" ./cmd/mockserver )
+# SKIP_MOCK short-circuits this: no Go toolchain, no mock backend, and
+# VGI_X509_TEST_ADDR stays unset so tls_inspect.test require-env-SKIPs itself.
+if [ -z "${SKIP_MOCK:-}" ]; then
+  MOCK_BIN="$STAGE/mockserver"
+  echo "Building mock TLS server ..."
+  ( cd "$REPO" && go build -o "$MOCK_BIN" ./cmd/mockserver )
 
-MOCK_PORT_FILE="$(mktemp)"
-"$MOCK_BIN" --addr 127.0.0.1:0 >"$MOCK_PORT_FILE" 2>/dev/null &
-MOCK_PID=$!
+  MOCK_PORT_FILE="$(mktemp)"
+  "$MOCK_BIN" --addr 127.0.0.1:0 >"$MOCK_PORT_FILE" 2>/dev/null &
+  MOCK_PID=$!
 
-PORT=""
-for _ in $(seq 1 30); do
-  PORT="$(sed -n 's/^PORT:\([0-9][0-9]*\)$/\1/p' "$MOCK_PORT_FILE" 2>/dev/null | head -1)"
-  [ -n "$PORT" ] && break
-  sleep 0.2
-done
-if [ -z "$PORT" ]; then
-  echo "ERROR: mock server did not report a port" >&2
-  exit 1
+  PORT=""
+  for _ in $(seq 1 30); do
+    PORT="$(sed -n 's/^PORT:\([0-9][0-9]*\)$/\1/p' "$MOCK_PORT_FILE" 2>/dev/null | head -1)"
+    [ -n "$PORT" ] && break
+    sleep 0.2
+  done
+  if [ -z "$PORT" ]; then
+    echo "ERROR: mock server did not report a port" >&2
+    exit 1
+  fi
+  rm -f "$MOCK_PORT_FILE"
+  export VGI_X509_TEST_ADDR="127.0.0.1:$PORT"
+  echo "Mock TLS server listening on $VGI_X509_TEST_ADDR (pid $MOCK_PID)"
+else
+  echo "SKIP_MOCK set: not starting the mock TLS server (offline tests only; tls_inspect.test will require-env-SKIP)"
 fi
-rm -f "$MOCK_PORT_FILE"
-export VGI_X509_TEST_ADDR="127.0.0.1:$PORT"
-echo "Mock TLS server listening on $VGI_X509_TEST_ADDR (pid $MOCK_PID)"
 
 # --- Per-transport: resolve VGI_X509_WORKER (the ATTACH LOCATION) ------------
 case "$TRANSPORT" in
@@ -95,6 +113,15 @@ case "$TRANSPORT" in
     ;;
 
   http)
+    # Pre-launched endpoint: if the LOCATION is already an http(s):// URL (e.g.
+    # a warm container the caller started), use it verbatim — do not spawn a
+    # local binary (there may be none on this runner).
+    case "$WORKER_BIN" in
+      http://*|https://*)
+        export VGI_X509_WORKER="$WORKER_BIN"
+        echo "Transport: http — using pre-launched worker at $VGI_X509_WORKER"
+        ;;
+      *)
     WORKER_PORT_FILE="$(mktemp)"
     echo "Transport: http — starting '$WORKER_BIN --http' ..."
     "$WORKER_BIN" --http >"$WORKER_PORT_FILE" 2>/dev/null &
@@ -115,6 +142,8 @@ case "$TRANSPORT" in
     # at <LOCATION>/<method>, mounted at the server root).
     export VGI_X509_WORKER="http://127.0.0.1:$WPORT"
     echo "HTTP worker listening on $VGI_X509_WORKER (pid $WORKER_PID)"
+        ;;
+    esac
     ;;
 
   unix)
@@ -192,10 +221,10 @@ rm -f "$STAGE/test/_warm.test"
 # built-in network-error allowlist that includes "HTTP". A broken HTTP transport
 # would otherwise show "All tests were skipped" and go GREEN having run nothing.
 # We detect that and fail explicitly.
-echo "Running suite (transport: $TRANSPORT, worker: $VGI_X509_WORKER) ..."
+echo "Running suite (transport: $TRANSPORT, worker: $VGI_X509_WORKER, pattern: $TEST_PATTERN) ..."
 RUN_LOG="$STAGE/run.log"
 set +e
-"$HAYBARN_UNITTEST" "test/sql/*" 2>&1 | tee "$RUN_LOG"
+"$HAYBARN_UNITTEST" "$TEST_PATTERN" 2>&1 | tee "$RUN_LOG"
 RUN_RC="${PIPESTATUS[0]}"
 set -e
 

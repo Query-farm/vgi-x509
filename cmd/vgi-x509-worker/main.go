@@ -71,7 +71,7 @@ func main() {
 				"a policy, expanding a certificate into a row per attribute for ad-hoc inspection, or pulling the " +
 				"chain a live server presents to confirm what it actually serves. Offline certificate parsing " +
 				"runs entirely in-process; live endpoint inspection **opens a network connection, so use it " +
-				"against AUTHORIZED endpoints only.** Discover the exact functions by listing the schema.\n\n" +
+				"against AUTHORIZED endpoints only.**\n\n" +
 				"## Typical uses\n\n" +
 				"A few patterns recur. To flag soon-to-expire certificates, apply `cert_not_after` to a " +
 				"column of PEM or DER certificates and keep the rows whose expiry falls inside your renewal " +
@@ -130,7 +130,7 @@ func main() {
 					"### Usage\n\n" +
 					"Certificate inputs accept **PEM text** (`VARCHAR`) or **DER bytes** (`BLOB`); " +
 					"the content is sniffed at runtime. NULL certificate input yields NULL " +
-					"(scalars) or zero rows. List the schema to discover the exact functions.",
+					"(scalars) or zero rows.",
 				// VGI413 category registry — each object tags a vgi.category naming one of these.
 				"vgi.categories": x509worker.CategoriesJSON,
 				// VGI506 representative example queries (catalog-qualified, executable).

@@ -5,6 +5,8 @@ package x509worker
 import (
 	"encoding/json"
 	"strings"
+
+	"github.com/Query-farm/vgi-go/vgi"
 )
 
 // Shared per-object discovery / description metadata for the vgi-lint strict
@@ -153,17 +155,50 @@ var executableExamplesJSON = mustJSON([]executableExample{
 	},
 })
 
-// SchemaExampleQueries is the schema-level vgi.example_queries payload (VGI506):
-// a plain string of representative, catalog-qualified SQL. It uses only OFFLINE
-// functions over the committed fixture PEM so every line executes as written when
-// the worker is attached (tls_inspect needs a live network endpoint, so it is
-// shown only as an illustrative comment, not an executable statement).
-var SchemaExampleQueries = "SELECT x509.main.cert_subject('" + fixturePEM + "');\n" +
-	"SELECT x509.main.cert_issuer('" + fixturePEM + "');\n" +
-	"SELECT x509.main.cert_fingerprint('" + fixturePEM + "');\n" +
-	"SELECT x509.main.cert_is_expired('" + fixturePEM + "');\n" +
-	"SELECT x509.main.cert_sans('" + fixturePEM + "');\n" +
-	"SELECT field, value FROM x509.main.cert_info('" + fixturePEM + "') ORDER BY field;"
+// SchemaExampleQueries is the schema-level vgi.example_queries payload (VGI506 /
+// VGI515): a JSON array of {description, sql} objects — every example carries a
+// human-readable description (the plain-string form the native carrier keeps
+// drops descriptions). It uses only OFFLINE functions over the committed fixture
+// PEM so every statement executes as written when the worker is attached
+// (tls_inspect needs a live network endpoint and is excluded).
+var SchemaExampleQueries = mustJSON([]executableExample{
+	{
+		Description: "Read the subject distinguished name of a certificate.",
+		SQL:         "SELECT x509.main.cert_subject('" + fixturePEM + "') AS subject",
+	},
+	{
+		Description: "Read the issuer distinguished name of a certificate.",
+		SQL:         "SELECT x509.main.cert_issuer('" + fixturePEM + "') AS issuer",
+	},
+	{
+		Description: "Compute the SHA-256 fingerprint of a certificate (lowercase hex).",
+		SQL:         "SELECT x509.main.cert_fingerprint('" + fixturePEM + "') AS fingerprint",
+	},
+	{
+		Description: "Flag a certificate that is currently outside its validity window.",
+		SQL:         "SELECT x509.main.cert_is_expired('" + fixturePEM + "') AS is_expired",
+	},
+	{
+		Description: "List a certificate's subject alternative names (DNS names then IP addresses).",
+		SQL:         "SELECT x509.main.cert_sans('" + fixturePEM + "') AS sans",
+	},
+	{
+		Description: "Dump every certificate attribute as (field, value) rows, ordered by field.",
+		SQL:         "SELECT field, value FROM x509.main.cert_info('" + fixturePEM + "') ORDER BY field",
+	},
+})
+
+// exampleQueriesJSON encodes a function's CatalogExample list as the
+// vgi.example_queries tag payload (VGI515): a JSON array of {description, sql}
+// objects. Emitting it as a tag preserves each example's description, which the
+// native duckdb_functions().examples carrier drops.
+func exampleQueriesJSON(exs []vgi.CatalogExample) string {
+	out := make([]executableExample, len(exs))
+	for i, e := range exs {
+		out[i] = executableExample{Description: e.Description, SQL: e.SQL}
+	}
+	return mustJSON(out)
+}
 
 // Category names (VGI413): the schema declares a vgi.categories registry
 // (CategoriesJSON) and every object tags itself with a vgi.category naming one of

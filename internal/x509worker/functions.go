@@ -270,9 +270,10 @@ func (f *certSANsScalar) Metadata() vgi.FunctionMetadata {
 		"san, subject alternative names, dns names, ip addresses, alt names, hostnames, "+
 			"cert_sans, x509, certificate",
 	), map[string]string{
-		// VGI509: at least one object ships guaranteed-runnable executable examples.
-		"vgi.executable_examples": executableExamplesJSON,
-		"vgi.category":            CategoryParsing,
+		// VGI509: a guaranteed-runnable executable example, like the other scalars.
+		"vgi.executable_examples": scalarExecExampleJSON("cert_sans",
+			"List the subject alternative names (DNS names then IP addresses)."),
+		"vgi.category": CategoryParsing,
 		// VGI515: described example list as a tag (the native carrier drops descriptions).
 		"vgi.example_queries": exampleQueriesJSON(sansExamples),
 	})

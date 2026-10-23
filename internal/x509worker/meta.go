@@ -107,72 +107,19 @@ func scalarExecExampleJSON(fn, desc string) string {
 	}})
 }
 
-// executableExamplesJSON is the JSON-encoded vgi.executable_examples payload: a
-// list of {"description","sql"} objects whose SQL is catalog-qualified
-// (x509.main.<fn>(...)) and self-contained (it embeds the fixture PEM), so every
-// statement runs as written against the attached worker. Only OFFLINE functions
-// are used here (tls_inspect needs a live network endpoint and is excluded).
-var executableExamplesJSON = mustJSON([]executableExample{
-	{
-		Description: "Read the subject distinguished name of a certificate.",
-		SQL:         "SELECT x509.main.cert_subject('" + fixturePEM + "') AS subject",
-	},
-	{
-		Description: "Read the issuer distinguished name of a certificate.",
-		SQL:         "SELECT x509.main.cert_issuer('" + fixturePEM + "') AS issuer",
-	},
-	{
-		Description: "Read the public-key algorithm and size/curve.",
-		SQL:         "SELECT x509.main.cert_key_algorithm('" + fixturePEM + "') AS key_algorithm",
-	},
-	{
-		Description: "Compute the SHA-256 fingerprint (lowercase hex).",
-		SQL:         "SELECT x509.main.cert_fingerprint('" + fixturePEM + "') AS fingerprint",
-	},
-	{
-		Description: "Check whether the certificate is a CA certificate.",
-		SQL:         "SELECT x509.main.cert_is_ca('" + fixturePEM + "') AS is_ca",
-	},
-	{
-		Description: "Check whether the certificate is currently expired.",
-		SQL:         "SELECT x509.main.cert_is_expired('" + fixturePEM + "') AS is_expired",
-	},
-	{
-		Description: "Read the start of the certificate validity window (UTC).",
-		SQL:         "SELECT x509.main.cert_not_before('" + fixturePEM + "') AS not_before",
-	},
-	{
-		Description: "Read the certificate expiry (end of validity window, UTC).",
-		SQL:         "SELECT x509.main.cert_not_after('" + fixturePEM + "') AS not_after",
-	},
-	{
-		Description: "List the subject alternative names (DNS names then IP addresses).",
-		SQL:         "SELECT x509.main.cert_sans('" + fixturePEM + "') AS sans",
-	},
-	{
-		Description: "Dump every certificate attribute as (field, value) rows.",
-		SQL:         "SELECT field, value FROM x509.main.cert_info('" + fixturePEM + "') ORDER BY field",
-	},
-})
-
 // SchemaExampleQueries is the schema-level vgi.example_queries payload (VGI506 /
 // VGI515): a JSON array of {description, sql} objects — every example carries a
 // human-readable description (the plain-string form the native carrier keeps
 // drops descriptions). It uses only OFFLINE functions over the committed fixture
 // PEM so every statement executes as written when the worker is attached
-// (tls_inspect needs a live network endpoint and is excluded).
+// (tls_inspect needs a live network endpoint and is excluded). Each example
+// embeds the ~800-character fixture, so the list stays at four to keep the tag
+// under the 4,000-character agent context limit (VGI417); every function also
+// carries its own examples.
 var SchemaExampleQueries = mustJSON([]executableExample{
 	{
 		Description: "Read the subject distinguished name of a certificate.",
 		SQL:         "SELECT x509.main.cert_subject('" + fixturePEM + "') AS subject",
-	},
-	{
-		Description: "Read the issuer distinguished name of a certificate.",
-		SQL:         "SELECT x509.main.cert_issuer('" + fixturePEM + "') AS issuer",
-	},
-	{
-		Description: "Compute the SHA-256 fingerprint of a certificate (lowercase hex).",
-		SQL:         "SELECT x509.main.cert_fingerprint('" + fixturePEM + "') AS fingerprint",
 	},
 	{
 		Description: "Flag a certificate that is currently outside its validity window.",
@@ -235,25 +182,21 @@ var CategoriesJSON = mustJSON([]category{
 })
 
 // agentTestTask is one analyst task for `vgi-lint simulate` (VGI152 / VGI920): a
-// natural-language prompt plus a grader-only oracle. Deterministic, offline tasks
-// use ReferenceSQL (exact result compare). Live tasks (tls_inspect, whose output
-// is a real server certificate that rotates) instead use CheckSQL — a post-session
-// boolean assertion of a STABLE fact — so grading cannot flake on cert rotation
-// (the reference/check fields are grader-only and never shown to the analyst).
+// natural-language prompt. Only name + prompt are published (VGI416); each task's
+// grader-only oracle lives in the private repo-root sidecar vgi-agent-tests.yaml,
+// keyed by task name, which vgi-lint discovers on its own. Deterministic, offline
+// tasks use reference_sql (exact result compare, with ignore_column_names). Live
+// tasks (tls_inspect, whose output is a real server certificate that rotates)
+// instead use check_sql — a post-session boolean assertion of a STABLE fact — so
+// grading cannot flake on cert rotation. Keep the sidecar in sync when a task
+// changes.
 type agentTestTask struct {
-	Name         string `json:"name"`
-	Prompt       string `json:"prompt"`
-	ReferenceSQL string `json:"reference_sql,omitempty"`
-	// CheckSQL is a grader-only post-session assertion (VGI920 tier 2): it passes
-	// when its first row/column is truthy. Used for live-data tasks where an exact
-	// reference compare would be a flake.
-	CheckSQL string `json:"check_sql,omitempty"`
-	// IgnoreColumnNames relaxes the reference compare to values-only.
-	IgnoreColumnNames bool `json:"ignore_column_names,omitempty"`
+	Name   string `json:"name"`
+	Prompt string `json:"prompt"`
 }
 
 // AgentTestTasksJSON is the catalog-level vgi.agent_test_tasks payload (VGI152):
-// a JSON array of {name, prompt, reference_sql} tasks that `vgi-lint simulate`
+// a JSON array of {name, prompt} tasks that `vgi-lint simulate`
 // uses to measure how well an agent actually drives this worker. Every task is
 // OFFLINE — each prompt embeds the committed fixture certificate so the agent can
 // answer with the offline cert-parsing functions, with no live TLS endpoint
@@ -261,73 +204,55 @@ type agentTestTask struct {
 // attach it.
 var AgentTestTasksJSON = mustJSON([]agentTestTask{
 	{
-		Name:              "certificate serial number",
-		Prompt:            "Return the serial number of this X.509 certificate as a single value, exactly as the worker reports it:\n" + fixturePEM,
-		ReferenceSQL:      "SELECT x509.main.cert_serial('" + fixturePEM + "') AS serial",
-		IgnoreColumnNames: true,
+		Name:   "certificate serial number",
+		Prompt: "Return the serial number of this X.509 certificate as a single value, exactly as the worker reports it:\n" + fixturePEM,
 	},
 	{
 		// Reframed as a yes/no predicate over the worker's own output so grading
 		// cannot flake on how the analyst spells or aliases the algorithm string
 		// (e.g. "ECDSA" vs "ECDSA-P256" vs a renamed column). The fixture key is
 		// ECDSA on NIST P-256, so cert_key_algorithm returns exactly 'ECDSA-P256'.
-		Name:              "public-key algorithm is ECDSA P-256",
-		Prompt:            "Does this certificate use an ECDSA key on the NIST P-256 curve? Return a single boolean.\n" + fixturePEM,
-		ReferenceSQL:      "SELECT x509.main.cert_key_algorithm('" + fixturePEM + "') = 'ECDSA-P256' AS is_ecdsa_p256",
-		IgnoreColumnNames: true,
+		Name:   "public-key algorithm is ECDSA P-256",
+		Prompt: "Does this certificate use an ECDSA key on the NIST P-256 curve? Return a single boolean.\n" + fixturePEM,
 	},
 	{
-		Name:              "signature algorithm",
-		Prompt:            "What algorithm was used to sign this certificate? Return the single value the worker reports:\n" + fixturePEM,
-		ReferenceSQL:      "SELECT x509.main.cert_signature_algorithm('" + fixturePEM + "') AS signature_algorithm",
-		IgnoreColumnNames: true,
+		Name:   "signature algorithm",
+		Prompt: "What algorithm was used to sign this certificate? Return the single value the worker reports:\n" + fixturePEM,
 	},
 	{
-		Name:              "certificate fingerprint",
-		Prompt:            "Compute the SHA-256 fingerprint of this certificate as lowercase hex:\n" + fixturePEM,
-		ReferenceSQL:      "SELECT x509.main.cert_fingerprint('" + fixturePEM + "') AS fingerprint",
-		IgnoreColumnNames: true,
+		Name:   "certificate fingerprint",
+		Prompt: "Compute the SHA-256 fingerprint of this certificate as lowercase hex:\n" + fixturePEM,
 	},
 	{
-		Name:              "is a CA certificate",
-		Prompt:            "Is this certificate a certificate-authority (CA) certificate? Return a boolean:\n" + fixturePEM,
-		ReferenceSQL:      "SELECT x509.main.cert_is_ca('" + fixturePEM + "') AS is_ca",
-		IgnoreColumnNames: true,
+		Name:   "is a CA certificate",
+		Prompt: "Is this certificate a certificate-authority (CA) certificate? Return a boolean:\n" + fixturePEM,
 	},
 	{
-		Name:              "certificate expiry check",
-		Prompt:            "Is this certificate currently expired (outside its validity window)? Return a boolean:\n" + fixturePEM,
-		ReferenceSQL:      "SELECT x509.main.cert_is_expired('" + fixturePEM + "') AS is_expired",
-		IgnoreColumnNames: true,
+		Name:   "certificate expiry check",
+		Prompt: "Is this certificate currently expired (outside its validity window)? Return a boolean:\n" + fixturePEM,
 	},
 	{
-		Name:              "certificate expiry timestamp",
-		Prompt:            "When does this certificate expire? Return the end of its validity window as a timestamp:\n" + fixturePEM,
-		ReferenceSQL:      "SELECT x509.main.cert_not_after('" + fixturePEM + "') AS not_after",
-		IgnoreColumnNames: true,
+		Name:   "certificate expiry timestamp",
+		Prompt: "When does this certificate expire? Return the end of its validity window as a timestamp:\n" + fixturePEM,
 	},
 	{
-		Name:              "certificate valid-from timestamp",
-		Prompt:            "When does this certificate become valid? Return the start of its validity window (notBefore) as a single timestamp:\n" + fixturePEM,
-		ReferenceSQL:      "SELECT x509.main.cert_not_before('" + fixturePEM + "') AS not_before",
-		IgnoreColumnNames: true,
+		Name:   "certificate valid-from timestamp",
+		Prompt: "When does this certificate become valid? Return the start of its validity window (notBefore) as a single timestamp:\n" + fixturePEM,
 	},
 	{
 		Name: "boolean-valued certificate fields",
 		Prompt: "This worker exposes a browsable registry of every certificate attribute it can read and the scalar function that returns each one. " +
 			"Using that registry, list the fields whose result type is BOOLEAN together with the scalar function that returns them, ordered by field name.",
-		ReferenceSQL: "SELECT field, scalar_function FROM x509.main." + CertFieldsViewName + " WHERE result_type = 'BOOLEAN' ORDER BY field",
 	},
 	{
 		// tls_inspect connects to a LIVE endpoint whose certificate rotates, so an
 		// exact reference compare would be a latent flake. Grade instead via a
-		// CheckSQL assertion of a stable fact: the leaf certificate (seq 0) a TLS
+		// check_sql assertion of a stable fact: the leaf certificate (seq 0) a TLS
 		// server presents is never itself a CA certificate. example.com is an
 		// IANA-operated, long-stable endpoint used only for this defensive probe.
 		Name: "live TLS endpoint leaf certificate",
 		Prompt: "Connect to the live TLS endpoint example.com:443 and inspect the certificate chain it presents. " +
 			"Is the leaf certificate — the one at sequence 0 — itself a certificate-authority (CA) certificate? Return a single boolean.",
-		CheckSQL: "SELECT bool_and(NOT is_ca) FROM x509.main.tls_inspect('example.com:443') WHERE seq = 0",
 	},
 	{
 		// Reframed as a yes/no predicate over the worker's own cert_subject output:
@@ -335,33 +260,26 @@ var AgentTestTasksJSON = mustJSON([]agentTestTask{
 		// latent flake because an agent reorders or reformats the RDN components. The
 		// fixture subject is CN=test.vgi-x509.example,O=VGI X509 Fixture, so its
 		// distinguished name contains the host name test.vgi-x509.example.
-		Name:              "certificate subject names the expected host",
-		Prompt:            "Does the subject of this certificate name the host test.vgi-x509.example (i.e. its subject distinguished name contains that name)? Return a single boolean.\n" + fixturePEM,
-		ReferenceSQL:      "SELECT x509.main.cert_subject('" + fixturePEM + "') LIKE '%test.vgi-x509.example%' AS subject_names_host",
-		IgnoreColumnNames: true,
+		Name:   "certificate subject names the expected host",
+		Prompt: "Does the subject of this certificate name the host test.vgi-x509.example (i.e. its subject distinguished name contains that name)? Return a single boolean.\n" + fixturePEM,
 	},
 	{
 		// Reframed as a boolean self-issued check for the same reason as the subject
 		// task. The fixture is self-signed, so its issuer distinguished name equals
 		// its subject distinguished name.
-		Name:              "certificate is self-issued",
-		Prompt:            "Is this certificate self-issued — that is, does its issuer distinguished name equal its subject distinguished name? Return a single boolean.\n" + fixturePEM,
-		ReferenceSQL:      "SELECT x509.main.cert_issuer('" + fixturePEM + "') = x509.main.cert_subject('" + fixturePEM + "') AS self_issued",
-		IgnoreColumnNames: true,
+		Name:   "certificate is self-issued",
+		Prompt: "Is this certificate self-issued — that is, does its issuer distinguished name equal its subject distinguished name? Return a single boolean.\n" + fixturePEM,
 	},
 	{
 		// Reframed as a set-membership predicate: returning a whole list value verbatim
 		// is a latent flake (the analyst may unnest it to rows or reorder it). The
 		// fixture's subject alternative names include the DNS name alt.vgi-x509.example.
-		Name:              "subject alternative names include alt host",
-		Prompt:            "Is alt.vgi-x509.example one of this certificate's subject alternative names (SANs)? Return a single boolean.\n" + fixturePEM,
-		ReferenceSQL:      "SELECT list_contains(x509.main.cert_sans('" + fixturePEM + "'), 'alt.vgi-x509.example') AS has_san",
-		IgnoreColumnNames: true,
+		Name:   "subject alternative names include alt host",
+		Prompt: "Is alt.vgi-x509.example one of this certificate's subject alternative names (SANs)? Return a single boolean.\n" + fixturePEM,
 	},
 	{
-		Name:         "dump all certificate fields",
-		Prompt:       "Dump every attribute of this certificate as (field, value) rows, ordered by field:\n" + fixturePEM,
-		ReferenceSQL: "SELECT field, value FROM x509.main.cert_info('" + fixturePEM + "') ORDER BY field",
+		Name:   "dump all certificate fields",
+		Prompt: "Dump every attribute of this certificate as (field, value) rows, ordered by field:\n" + fixturePEM,
 	},
 })
 

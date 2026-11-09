@@ -44,7 +44,8 @@ func main() {
 		vgi.WithCatalogComment("Parse X.509 certificates and inspect TLS endpoints"),
 		vgi.WithCatalogTags(map[string]string{
 			"source":       "vgi-x509",
-			"vgi.title":    "X.509 Certificate & TLS Inspection",
+			"vgi.title":    "X.509 & TLS",
+			"vgi.subtitle": "Read subjects, expiry dates and fingerprints from X.509 certificates, and fetch the chain a TLS server presents.",
 			"vgi.keywords": x509worker.KeywordsJSON("x509, certificate, tls, ssl, pem, der, fingerprint, subject, issuer, expiry, sans, certificate authority, security, compliance"),
 			"vgi.doc_llm": "Defensive X.509 / TLS inspection toolkit over SQL. Parse a certificate " +
 				"(PEM text or DER bytes) and read its subject, issuer, serial, validity window, public-key and " +
@@ -110,7 +111,7 @@ func main() {
 		}),
 		vgi.WithSchemaTags(map[string]map[string]string{
 			"main": {
-				"vgi.title": "x509 — main",
+				"vgi.title": "Certificate functions",
 				"vgi.keywords": x509worker.KeywordsJSON("x509, certificate, tls, ssl, pem, der, cert_subject, cert_issuer, cert_fingerprint, " +
 					"cert_sans, cert_info, tls_inspect, expiry, certificate authority"),
 				// VGI123 classifying tags use BARE keys (NOT vgi.-namespaced).

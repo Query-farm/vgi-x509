@@ -21,7 +21,7 @@ VGI protocol over stdio. Catalog name: `x509`.
 ```sql
 INSTALL vgi FROM community; LOAD vgi;
 
-ATTACH 'x509' AS x509 (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-x509@v0.2.1');
+ATTACH 'x509' AS x509 (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-x509@v0.3.0');
 
 -- Parse a certificate (PEM text or DER bytes work everywhere):
 SELECT x509.cert_subject(pem), x509.cert_not_after(pem), x509.cert_is_expired(pem)
@@ -46,7 +46,7 @@ Every [GitHub release](https://github.com/Query-farm/vgi-x509/releases) ships a 
 INSTALL vgi FROM community;
 LOAD vgi;
 
-ATTACH 'x509' AS x509 (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-x509@v0.2.1');
+ATTACH 'x509' AS x509 (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-x509@v0.3.0');
 
 -- Read the subject distinguished name of a certificate.
 SELECT x509.main.cert_subject('-----BEGIN CERTIFICATE-----
@@ -77,14 +77,14 @@ KBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0
 -----END CERTIFICATE-----') AS is_expired;
 ```
 
-Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64) and Windows (x86-64). `github-auto://` needs an explicit release tag; change `@v0.2.1` to move to a newer release.
+Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64) and Windows (x86-64). `github-auto://` needs an explicit release tag; change `@v0.3.0` to move to a newer release.
 
 ### Other ways to run it
 
 - **Docker** (the image bundles the worker; needs a container runtime):
 
   ```sql
-  ATTACH 'x509' AS x509 (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-x509:0.2.1');
+  ATTACH 'x509' AS x509 (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-x509:0.3.0');
   ```
 
 - **Manual download.** Download the archive for your platform from the [releases page](https://github.com/Query-farm/vgi-x509/releases), verify it against its `.sha256` file (a cosign `.cosign.bundle` is published alongside), unpack it, and set `LOCATION` to the path of the extracted worker executable.

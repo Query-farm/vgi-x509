@@ -1,0 +1,5 @@
+Shared notebook tools v0.3.8; complete default runs in fresh kernels.
+Updated vgi-example-notebooks v0.3.7 (b46fe548) -> v0.3.8 (025173bd)
+Running 01_plan_certificate_work.ipynb ...
+OK: 17 code cells, 2 charts, 3.5s
+All saved output cells are byte-identical to the previous publication. Analytical code is unchanged.

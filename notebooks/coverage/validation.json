@@ -1,0 +1,878 @@
+{
+  "schema_version": 1,
+  "status": "met",
+  "meets_target": true,
+  "catalogs": {
+    "released": {
+      "catalog_status": "verified",
+      "revision": "v0.4.0",
+      "catalog_sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+      "collection_reconciled": true,
+      "denominator": 14,
+      "observed_objects": 14,
+      "required": 7,
+      "verified_count": 8,
+      "candidate_count": 0,
+      "fraction": 0.5714285714285714,
+      "meets_target": true,
+      "exact_runtime_count": 8,
+      "runtime_revisions": [
+        "v0.4.0"
+      ],
+      "covered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_fingerprint"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_is_ca"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_issuer"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_key_algorithm"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_not_after"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_not_before"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_sans"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_subject"
+        }
+      ],
+      "uncovered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_fields"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_info"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_is_expired"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_serial"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_signature_algorithm"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "tls_inspect"
+        }
+      ],
+      "objects": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_fields",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "VIEW(field VARCHAR, scalar_function VARCHAR, result_type VARCHAR, description VARCHAR)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_fingerprint",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_fingerprint(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_info",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_info(ANY) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_is_ca",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_is_ca(ANY) -> BOOLEAN"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_is_expired",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_is_expired(ANY) -> BOOLEAN"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_issuer",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_issuer(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_key_algorithm",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_key_algorithm(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_not_after",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_not_after(ANY) -> TIMESTAMP"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_not_before",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_not_before(ANY) -> TIMESTAMP"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_sans",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_sans(ANY) -> VARCHAR[]"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_serial",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_serial(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_signature_algorithm",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_signature_algorithm(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_subject",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_subject(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "tls_inspect",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "tls_inspect(VARCHAR, BOOLEAN, VARCHAR, BIGINT) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        }
+      ],
+      "issues": []
+    },
+    "current": {
+      "catalog_status": "verified",
+      "revision": "6f0e8893f5c461f112d2076450869c1bff776475",
+      "catalog_sha256": "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d",
+      "collection_reconciled": true,
+      "denominator": 14,
+      "observed_objects": 14,
+      "required": 7,
+      "verified_count": 8,
+      "candidate_count": 0,
+      "fraction": 0.5714285714285714,
+      "meets_target": true,
+      "exact_runtime_count": 0,
+      "runtime_revisions": [
+        "v0.4.0"
+      ],
+      "covered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_fingerprint"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_is_ca"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_issuer"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_key_algorithm"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_not_after"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_not_before"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_sans"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_subject"
+        }
+      ],
+      "uncovered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_fields"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_info"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_is_expired"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_serial"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_signature_algorithm"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "tls_inspect"
+        }
+      ],
+      "objects": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_fields",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "VIEW(field VARCHAR, scalar_function VARCHAR, result_type VARCHAR, description VARCHAR)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_fingerprint",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_fingerprint(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_info",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_info(ANY) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_is_ca",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_is_ca(ANY) -> BOOLEAN"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_is_expired",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_is_expired(ANY) -> BOOLEAN"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_issuer",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_issuer(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_key_algorithm",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_key_algorithm(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_not_after",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_not_after(ANY) -> TIMESTAMP"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_not_before",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_not_before(ANY) -> TIMESTAMP"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_sans",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_sans(ANY) -> VARCHAR[]"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_serial",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_serial(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_signature_algorithm",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_signature_algorithm(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "cert_subject",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "cert_subject(ANY) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "tls_inspect",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "tls_inspect(VARCHAR, BOOLEAN, VARCHAR, BIGINT) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  "interface_drift": {
+    "known": true,
+    "current_only": [],
+    "released_only": [],
+    "changed": []
+  },
+  "notebooks": {
+    "01_plan_certificate_work.ipynb": {
+      "verified": true,
+      "issues": []
+    }
+  },
+  "examples": [
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "cert_fingerprint"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "cert_subject"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "cert_issuer"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "cert_not_before"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "cert_not_after"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "cert_sans"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "cert_is_ca"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "cert_key_algorithm"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e"
+    }
+  ],
+  "issues": []
+}

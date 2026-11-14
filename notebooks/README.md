@@ -10,7 +10,7 @@ certificate profiles, and deduplicates the planning work by certificate fingerpr
 and run all. The base-only bootstrap uses the
 [shared notebook package v0.3.7](https://github.com/Query-farm/vgi-example-notebooks/tree/v0.3.7),
 which owns canonical branding, SVG presentation, hash-verified fixture retrieval
-and the [standard](https://github.com/Query-farm/vgi-example-notebooks/blob/v0.3.7/docs/standard.md).
+and the [standard](https://github.com/Query-farm/vgi-example-notebooks/blob/v0.3.8/docs/standard.md).
 Saved GitHub charts link to committed SVGs; Jupyter and Colab runs display native SVG.
 
 ## Run locally

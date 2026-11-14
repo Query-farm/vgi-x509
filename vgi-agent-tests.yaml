@@ -31,8 +31,8 @@ tasks:
   - name: "certificate valid-from timestamp"
     reference_sql: "SELECT x509.main.cert_not_before('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----') AS not_before"
     ignore_column_names: true
-  - name: "scalar functions returning text"
-    reference_sql: "SELECT scalar_function FROM x509.main.cert_fields WHERE result_type = 'VARCHAR' ORDER BY scalar_function"
+  - name: "scalar function count by result type"
+    reference_sql: "SELECT result_type, count(*) AS functions FROM x509.main.cert_fields GROUP BY result_type ORDER BY result_type"
     ignore_column_names: true
   - name: "live TLS endpoint chain"
     check_sql: "SELECT count(*) = 1 AND bool_and(a.chain_length = l.n AND a.leaf_is_ca = l.leaf_is_ca) FROM answer AS a, (SELECT count(*) AS n, bool_or(is_ca) FILTER (WHERE seq = 0) AS leaf_is_ca FROM x509.main.tls_inspect('example.com:443')) AS l"

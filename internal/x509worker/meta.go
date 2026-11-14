@@ -334,11 +334,13 @@ var AgentTestTasksJSON = mustJSON([]agentTestTask{
 			"start of its validity window (notBefore).\n" + fixturePEM,
 	},
 	{
-		Name: "scalar functions returning text",
+		// An aggregate over the cert_fields registry, so the answer is not the
+		// view's published filter example with a different literal.
+		Name: "scalar function count by result type",
 		Prompt: "This worker exposes a browsable registry of every certificate attribute it can read, the scalar " +
-			"function that returns each one, and that function's result type. Using that registry, list the " +
-			"scalar functions whose result type is VARCHAR. Return one VARCHAR column with the function names, " +
-			"one row per function, ordered by name.",
+			"function that returns each one, and that function's result type. Using that registry, count the " +
+			"scalar functions per result type. Return one row per result type with two columns: the type name " +
+			"(VARCHAR) and the number of functions (BIGINT), ordered by type name.",
 	},
 	{
 		// Graded by check_sql (see vgi-agent-tests.yaml): it re-inspects the live

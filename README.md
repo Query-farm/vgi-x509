@@ -266,3 +266,7 @@ Written by [Query.Farm](https://query.farm).
 
 Copyright 2026 Query Farm LLC - https://query.farm
 
+
+## Notebooks
+
+[Executed SQL walkthrough](notebooks/README.md): plan certificate work at a fixed UTC assessment time, visualize validity windows, and reconcile assignments with distinct fingerprints.

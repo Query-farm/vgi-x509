@@ -1,0 +1,44 @@
+{
+  "query": "SELECT * FROM duckdb_views() WHERE database_name='x509' ORDER BY schema_name,view_name",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "schema_oid",
+    "view_name",
+    "view_oid",
+    "comment",
+    "tags",
+    "internal",
+    "temporary",
+    "column_count",
+    "sql",
+    "is_bound"
+  ],
+  "rows": [
+    [
+      "x509",
+      22592,
+      "main",
+      22593,
+      "cert_fields",
+      22798,
+      "Registry of certificate attributes: each field, the scalar function that returns it, and its result type.",
+      {
+        "domain": "security",
+        "topic": "x509-certificates-and-tls",
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "A browsable registry of every certificate attribute this worker can read: each row maps a field name (the same field cert_info emits) to the scalar function that returns it and to that value's DuckDB result type. Query it to discover the worker's certificate surface without first parsing a certificate blob.",
+        "vgi.doc_md": "A browsable registry mapping each certificate attribute to the scalar function that returns it and that value's DuckDB type. Columns: `field`, `scalar_function`, `result_type`, `description`.",
+        "vgi.example_queries": "[{\"description\":\"List the certificate fields whose scalar function returns a BOOLEAN, with the function name.\",\"sql\":\"SELECT field, scalar_function FROM x509.main.cert_fields WHERE result_type = 'BOOLEAN' ORDER BY field\"}]",
+        "vgi.keywords": "[\"cert fields\",\"registry\",\"catalog\",\"field list\",\"scalar functions\",\"discover\",\"reference\",\"cert_fields\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate Field Registry"
+      },
+      false,
+      false,
+      null,
+      "CREATE VIEW cert_fields AS SELECT * FROM (SELECT * FROM (VALUES ('subject', 'cert_subject', 'VARCHAR', 'Subject distinguished name (RFC 2253).'), ('issuer', 'cert_issuer', 'VARCHAR', 'Issuer distinguished name of the signing CA (RFC 2253).'), ('serial', 'cert_serial', 'VARCHAR', 'Serial number as a decimal string.'), ('not_before', 'cert_not_before', 'TIMESTAMP', 'Start of the validity window (UTC).'), ('not_after', 'cert_not_after', 'TIMESTAMP', 'End of the validity window / expiry (UTC).'), ('is_expired', 'cert_is_expired', 'BOOLEAN', 'Whether the certificate is outside its validity window right now.'), ('key_algorithm', 'cert_key_algorithm', 'VARCHAR', 'Public-key algorithm with size or curve (e.g. RSA-2048, ECDSA-P256).'), ('signature_algorithm', 'cert_signature_algorithm', 'VARCHAR', 'Algorithm used to sign the certificate (e.g. ECDSA-SHA256).'), ('fingerprint_sha256', 'cert_fingerprint', 'VARCHAR', 'SHA-256 fingerprint of the DER encoding (lowercase hex).'), ('is_ca', 'cert_is_ca', 'BOOLEAN', 'Whether the certificate is a certificate-authority (CA) certificate.'), ('sans', 'cert_sans', 'VARCHAR[]', 'Subject alternative names: DNS names then IP addresses.')) AS valueslist) AS t(field, scalar_function, result_type, description);",
+      false
+    ]
+  ]
+}

@@ -1,0 +1,311 @@
+{
+  "schema_version": 1,
+  "catalogs": {
+    "released": {
+      "path": "coverage/catalog-released.json",
+      "sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T18:58:46.090685+00:00",
+        "catalog_sha256": "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+        "notes": "Complete native function/table/view exports through actual released and current Haybarn attachments; cross-checked parameterized scalar registration and table/view registrations. Fourteen logical names including cert_fields view; no clock-sensitive, live or difficult functions excluded from denominator. Ten stable scalar outputs match across six committed fixtures in fixture-compatibility.json. Current unknown-algorithm naming differs outside this Ed25519 example; all names and signatures agree."
+      }
+    },
+    "current": {
+      "path": "coverage/catalog-current.json",
+      "sha256": "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T18:58:46.090685+00:00",
+        "catalog_sha256": "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d",
+        "notes": "Complete native function/table/view exports through actual released and current Haybarn attachments; cross-checked parameterized scalar registration and table/view registrations. Fourteen logical names including cert_fields view; no clock-sensitive, live or difficult functions excluded from denominator. Ten stable scalar outputs match across six committed fixtures in fixture-compatibility.json. Current unknown-algorithm naming differs outside this Ed25519 example; all names and signatures agree."
+      }
+    }
+  },
+  "notebooks": [
+    {
+      "path": "01_plan_certificate_work.ipynb",
+      "sha256": "2dd4e277ebc96e56e625ecf88bffd0aba9b734801e03b1a73f919079bc0db925",
+      "execution": {
+        "path": "coverage/run-01.json",
+        "sha256": "35660005c2e245299e3375ac6d78cfe7bc389a40f7219e0b73e8196fa59c43d2"
+      }
+    }
+  ],
+  "examples": [
+    {
+      "object": {
+        "schema": "main",
+        "name": "cert_fingerprint"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "sql": [
+        {
+          "cell": "e75153c3",
+          "reference": "x509.main.cert_fingerprint"
+        }
+      ],
+      "narrative_cells": [
+        "da1da99c"
+      ],
+      "result_cells": [
+        "7ce04dca"
+      ],
+      "interpretation_cells": [
+        "7ce04dca"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T18:58:46.090685+00:00",
+        "notebook_sha256": "2dd4e277ebc96e56e625ecf88bffd0aba9b734801e03b1a73f919079bc0db925",
+        "catalog_sha256": [
+          "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+          "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d"
+        ],
+        "purpose": "Count actual certificate identities independently from assignment rows and retain a deduplicated work list.",
+        "finding": "Three selected assignments represent two fingerprints because api-primary and api-standby share certificate bytes. All eight assignments remain in the denominator, including one with no observed certificate. PEM/DER fingerprints also match SQL SHA256 of original DER."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "cert_subject"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "sql": [
+        {
+          "cell": "e75153c3",
+          "reference": "x509.main.cert_subject"
+        }
+      ],
+      "narrative_cells": [
+        "fdc10858"
+      ],
+      "result_cells": [
+        "ea50e578"
+      ],
+      "interpretation_cells": [
+        "fdc10858"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T18:58:46.090685+00:00",
+        "notebook_sha256": "2dd4e277ebc96e56e625ecf88bffd0aba9b734801e03b1a73f919079bc0db925",
+        "catalog_sha256": [
+          "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+          "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d"
+        ],
+        "purpose": "Compare parsed subject names with issuers to distinguish self-issued naming from signature validation.",
+        "finding": "All six subject/issuer comparisons return true. The notebook explicitly calls these self-issued names, not proof of a signature or trust; the separate deterministic fixture generator establishes their test self-signing."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "cert_issuer"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "sql": [
+        {
+          "cell": "e75153c3",
+          "reference": "x509.main.cert_issuer"
+        }
+      ],
+      "narrative_cells": [
+        "fdc10858"
+      ],
+      "result_cells": [
+        "ea50e578"
+      ],
+      "interpretation_cells": [
+        "fdc10858"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T18:58:46.090685+00:00",
+        "notebook_sha256": "2dd4e277ebc96e56e625ecf88bffd0aba9b734801e03b1a73f919079bc0db925",
+        "catalog_sha256": [
+          "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+          "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d"
+        ],
+        "purpose": "Use issuer names together with subjects to explain the provenance limits of this synthetic inventory.",
+        "finding": "The six comparisons agree; no external issuer or trust path is inferred from equal names. Certificate byte identities remain fingerprints, not these names."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "cert_not_before"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "sql": [
+        {
+          "cell": "e75153c3",
+          "reference": "x509.main.cert_not_before"
+        }
+      ],
+      "narrative_cells": [
+        "33f5030f"
+      ],
+      "result_cells": [
+        "6db90316"
+      ],
+      "interpretation_cells": [
+        "6db90316"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T18:58:46.090685+00:00",
+        "notebook_sha256": "2dd4e277ebc96e56e625ecf88bffd0aba9b734801e03b1a73f919079bc0db925",
+        "catalog_sha256": [
+          "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+          "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d"
+        ],
+        "purpose": "Exclude future-validity material from a fixed historical planning assessment even if its expiry enters a wider horizon.",
+        "finding": "The future certificate starts ten days after the fixed assessment and remains separately classified. Returned UTC wall-clock timestamps are not interpreted in local timezone; current-clock cert_is_expired is deliberately not used."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "cert_not_after"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "sql": [
+        {
+          "cell": "e75153c3",
+          "reference": "x509.main.cert_not_after"
+        }
+      ],
+      "narrative_cells": [
+        "c50d5bd7"
+      ],
+      "result_cells": [
+        "7ce04dca"
+      ],
+      "interpretation_cells": [
+        "7ce04dca"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T18:58:46.090685+00:00",
+        "notebook_sha256": "2dd4e277ebc96e56e625ecf88bffd0aba9b734801e03b1a73f919079bc0db925",
+        "catalog_sha256": [
+          "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+          "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d"
+        ],
+        "purpose": "Select time-valid certificates expiring on or before an inclusive planning horizon.",
+        "finding": "The seven-day shared certificate and fourteen-day boundary certificate produce three selected assignments and two certificate identities at horizon14. Expired material is separate, and the forty-five-day certificate joins only at horizon60."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "cert_sans"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "sql": [
+        {
+          "cell": "e75153c3",
+          "reference": "x509.main.cert_sans"
+        }
+      ],
+      "narrative_cells": [
+        "certificate-profile-question"
+      ],
+      "result_cells": [
+        "fdf21b18"
+      ],
+      "interpretation_cells": [
+        "certificate-profile-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T18:58:46.090685+00:00",
+        "notebook_sha256": "2dd4e277ebc96e56e625ecf88bffd0aba9b734801e03b1a73f919079bc0db925",
+        "catalog_sha256": [
+          "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+          "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d"
+        ],
+        "purpose": "Retain name scope when assignments collapse into one certificate-level planning item.",
+        "finding": "All six fixtures carry one SAN entry. The work list retains the shared-soon and boundary names alongside their fingerprints and assignment lists; SAN presence is not a hostname-validation result."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "cert_is_ca"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "sql": [
+        {
+          "cell": "e75153c3",
+          "reference": "x509.main.cert_is_ca"
+        }
+      ],
+      "narrative_cells": [
+        "certificate-profile-question"
+      ],
+      "result_cells": [
+        "certificate-profile-finding"
+      ],
+      "interpretation_cells": [
+        "certificate-profile-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T18:58:46.090685+00:00",
+        "notebook_sha256": "2dd4e277ebc96e56e625ecf88bffd0aba9b734801e03b1a73f919079bc0db925",
+        "catalog_sha256": [
+          "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+          "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d"
+        ],
+        "purpose": "Establish whether the supplied material fits this leaf-certificate planning narrative while retaining all observed certificates.",
+        "finding": "The returned flags classify all six observed certificates as leaves, so this example does not model CA rotation. Missing material has no parsed profile and is not counted as a leaf."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "cert_key_algorithm"
+      },
+      "notebook": "01_plan_certificate_work.ipynb",
+      "sql": [
+        {
+          "cell": "e75153c3",
+          "reference": "x509.main.cert_key_algorithm"
+        }
+      ],
+      "narrative_cells": [
+        "certificate-profile-question"
+      ],
+      "result_cells": [
+        "fdf21b18"
+      ],
+      "interpretation_cells": [
+        "certificate-profile-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T18:58:46.090685+00:00",
+        "notebook_sha256": "2dd4e277ebc96e56e625ecf88bffd0aba9b734801e03b1a73f919079bc0db925",
+        "catalog_sha256": [
+          "c700761db883a7c82f00f4916422b3445515ff356506b2e5bdd90c342f7f346e",
+          "c7e5c523dd3e4db57a473fbff910bb0072b37edc31b515ccf18c82fc121f882d"
+        ],
+        "purpose": "Carry actual public-key type into the certificate-level handoff context.",
+        "finding": "The six parsed keys are Ed25519 and the selected work list retains that type. This describes the fixture inventory, not an algorithm recommendation or a requirement to reuse an existing key."
+      }
+    }
+  ]
+}

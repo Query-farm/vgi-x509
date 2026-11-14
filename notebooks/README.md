@@ -1,51 +1,77 @@
-# VGI X.509 notebooks
+# Offline X.509 certificate planning
 
-[01 · Plan certificate work without losing the denominator](01_plan_certificate_work.ipynb) parses synthetic certificate files with visible SQL, audits validity windows at a fixed UTC assessment time, and compares assignment counts with distinct certificate fingerprints. It keeps missing, expired and not-yet-valid certificates separate.
+[01 · Plan certificate work without losing the denominator](01_plan_certificate_work.ipynb)
+parses six synthetic certificates through the real worker and joins them to eight
+authored assignments. The fixed assessment time is **2026-01-01 00:00:00 UTC**.
+The story keeps expired, future and missing material separate, interprets the
+certificate profiles, and deduplicates the planning work by certificate fingerprint.
 
-## Run
+[Open in Colab](https://colab.research.google.com/github/Query-farm/vgi-x509/blob/main/notebooks/01_plan_certificate_work.ipynb)
+and run all. The base-only bootstrap uses the
+[shared notebook package v0.3.7](https://github.com/Query-farm/vgi-example-notebooks/tree/v0.3.7),
+which owns canonical branding, SVG presentation, hash-verified fixture retrieval
+and the [standard](https://github.com/Query-farm/vgi-example-notebooks/blob/v0.3.7/docs/standard.md).
+Saved GitHub charts link to committed SVGs; Jupyter and Colab runs display native SVG.
 
-Install [uv](https://docs.astral.sh/uv/). From the repository root:
+## Run locally
 
-```sh
-uv sync --project notebooks --frozen
-uv run --project notebooks --frozen python notebooks/execute.py
-```
-
-The entire `notebooks/` directory also runs outside the worker checkout:
-
-```sh
-cd notebooks
-uv sync --frozen
-uv run --frozen python execute.py
-```
-
-Initial setup needs network access for the Python environment, VGI community extension and pinned native worker release. Certificate analysis is offline. No Go toolchain, worker build, credentials, live endpoints or external dataset is needed. Native archives cover macOS Apple silicon, Linux x86-64/arm64 and Windows x86-64; execution was verified on macOS Apple silicon.
-
-In VS Code select `notebooks/.venv/bin/python` and use `notebooks/` as the kernel working directory. Other Jupyter editors can register the kernel:
+Install Git and [uv](https://docs.astral.sh/uv/). From this directory:
 
 ```sh
-uv run --project notebooks --frozen python -m ipykernel install --user --name vgi-x509-notebooks --display-name 'Python (vgi-x509 notebooks)'
+uv sync --locked
+uv run --locked vgi-notebooks 01_plan_certificate_work.ipynb --timeout 300
 ```
 
-Restart and run all after changing parameters. VGI connection and analytical SQL remain visible; imports, styling, plots, assertions and cleanup source are folded. Both charts are embedded in the saved notebook.
+Select `notebooks/.venv/bin/python` in a Jupyter editor, restart the kernel, and run
+all. The local lock adds the shared `[runner]` extra; Colab installs only the base
+package, preserving compatible preinstalled plotting and Jupyter libraries.
+
+The visible SQL launches the native published release:
+
+```sql
+INSTALL vgi FROM community;
+LOAD vgi;
+ATTACH 'x509' (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-x509@v0.4.0');
+```
+
+VGI downloads and verifies the platform release. No Go compiler, worker checkout,
+credentials or engine build is required. The notebook locks Haybarn 2.0.0rc11.
+Initial downloads require network access; the certificate analysis is offline and
+makes no TLS endpoint connections. The shared connection uses an empty temporary
+SQL-secret directory with persistent secrets disabled. Change the worker release
+explicitly when upgrading, then rerun the default and experiment.
 
 ## Experiment
 
+Widen the planning horizon from 14 to 60 days in a separate output directory:
+
 ```sh
-uv run --project notebooks --frozen python notebooks/execute.py \
+uv run --locked vgi-notebooks 01_plan_certificate_work.ipynb \
   --parameters '{"HORIZON_DAYS":60}' \
-  --output-dir notebooks/validation/horizon-60
+  --output-dir artifacts/horizon-60 --timeout 300
 ```
 
-The default horizon is 14 days; the experiment widens it to 60. The assessment remains 2026-01-01 00:00:00 UTC. The runner requires a separate output directory for overrides, rejects unknown names, and saves only successful full executions. Failed runs preserve prior saved notebooks. Copies include relative assets, fixtures, helpers, environment and this documentation. Generated review charts, logs and experiment copies are ignored.
+The `later` certificate and its `batch-service` assignment enter the list. The
+selected population grows from **3 to 4 assignments** and **2 to 3 distinct
+certificates**. Assessment time, parsed dates, profiles and fingerprints remain
+fixed, as do expired, future and missing states. The shared certificate still
+represents two assignments. A wider horizon changes planning scope, not validity
+or trust. Reset the parameter to 14 for the saved default.
 
-## Portable startup and synthetic fixtures
+Overrides require a separate destination; failed execution preserves the previous
+successful default. Review artifacts, logs and experiment copies are ignored.
+A notebook-only copy can retrieve all companions through its bootstrap, without
+manual cloning or a local helper module.
 
-The literal SQL location is `github-auto://Query-farm/vgi-x509@v0.4.0`. VGI downloads, verifies and caches the platform release. The notebook lock pins Haybarn 2.0.0rc11; change the worker tag explicitly to upgrade and rerun both settings.
+## Synthetic fixture provenance
 
-Six authored Ed25519 leaf certificates are committed in PEM and DER form under `fixtures/`. The public `.example` names describe synthetic records. Two assignments share `shared-soon`, and one assignment has no certificate. The fixture intervals, expressed as days relative to the fixed assessment, are:
+Six authored Ed25519 leaf certificates are committed as PEM and DER under
+`fixtures/`. The shared `x509` registry pins their SHA-256 hashes to public commit
+`6f0e8893f5c461f112d2076450869c1bff776475`. The `.example` names are synthetic;
+no private key is saved. These keys are deterministically derivable from public
+fixture text and must never be used in service.
 
-| Certificate | NotBefore | NotAfter |
+| Certificate | NotBefore, days from assessment | NotAfter, days from assessment |
 | --- | ---: | ---: |
 | expired | −60 | −10 |
 | shared-soon | −30 | +7 |
@@ -54,24 +80,76 @@ Six authored Ed25519 leaf certificates are committed in PEM and DER form under `
 | future | +10 | +90 |
 | long | −30 | +120 |
 
-`build_fixtures.go` uses only the Go standard library and deterministic test keys to generate these exact certificate bytes. No private key file is saved. The keys are derivable from public fixture text and must never be used in service. Notebook execution uses the committed files and does not run the generator. Optional regeneration, with Go installed:
+The optional standard-library Go generator reproduces all twelve files byte for
+byte. Notebook execution reads the committed files and does not invoke it:
 
 ```sh
-go run notebooks/build_fixtures.go /tmp/vgi-x509-fixtures
+go run build_fixtures.go /tmp/vgi-x509-fixtures
 ```
 
-Regeneration was checked byte-for-byte against all twelve committed files. Each PEM file contains one certificate; the notebook is not a PEM-bundle inventory parser. Certificate SHA-256 fingerprints match both PEM/DER representations and SQL hashes of the original DER bytes.
+Each PEM contains exactly one certificate. This is not a PEM-bundle inventory
+parser. Worker fingerprints match both representations and SQL's SHA-256 of the
+original DER bytes. Two assignments share `shared-soon`; one has no certificate
+on file. The denominator remains eight assignment rows and six observed certificate
+fingerprints, including material outside the planning window.
 
-## Time and interpretation
+## Interpretation and limits
 
-Worker timestamps represent UTC wall-clock time as plain SQL TIMESTAMP. The notebook compares them with the explicit UTC assessment timestamp. It avoids `cert_is_expired`, whose answer follows the current clock and includes both expired and not-yet-valid certificates. The planning policy includes currently time-valid certificates with NotAfter at or before the horizon; the boundary certificate verifies the inclusive comparison.
+Worker timestamps are UTC wall-clock values returned as plain SQL TIMESTAMP.
+Comparisons use the explicit UTC assessment, not the machine's local timezone.
+`cert_is_expired` follows the current clock and includes not-yet-valid certificates;
+this fixed-date analysis instead compares the two returned validity boundaries.
+Expiry exactly on the requested horizon is included, provided the certificate is
+currently time-valid at assessment.
 
-The inventory has eight assignment rows and six distinct observed certificate fingerprints. Missing material remains unknown, not valid or expired. Counting assignments answers a different question from counting certificate bytes. A shared certificate appears once in the certificate-level work list with its assignment list retained.
+The profile summary identifies six leaves, one Ed25519 key type and six SAN entries.
+The work list preserves the selected SANs and key type as handoff context. This
+neither recommends an algorithm nor verifies that a service matches the names.
+Missing material remains unknown. Fingerprints identify certificate bytes; subject
+names, serials and SAN text alone are not certificate identities.
 
-Parsing does not validate a trust chain, check revocation, verify DNS names or establish what a server presents. Subject/issuer equality means self-issued; it does not itself verify the signature. The fixture generator establishes that these particular certificates were self-signed. The notebook does not invoke `tls_inspect` or contact live TLS endpoints. Repository transport tests exercise TLS inspection against disposable loopback servers.
+Parsing does not validate a trust chain, check revocation, verify DNS names or
+establish what a server presents. Subject/issuer equality establishes self-issued
+names, not a valid signature. The generator establishes that these particular test
+fixtures were self-signed. The notebook performs no live TLS inspection or service
+modification. Malformed bytes raise parsing errors; SQL NULL remains NULL, and
+both behaviors are checked separately. No production-compliance claim is made.
 
-Malformed certificate bytes fail parsing; SQL NULL propagates NULL. The notebook checks both separately, so malformed input is not silently converted into missing data. It does not assert current browser certificate policies or production compliance.
+## Surface coverage
 
-Validation covers both parameter settings, detached notebook execution, four chart renderings, twelve SQL checks, count reconciliations, a malformed-input probe and three runner guards. The polished default took 1.7 seconds and the detached sixty-day experiment took 1.9 seconds. The planning set grows from 3 to 4 assignments and from 2 to 3 distinct certificates; parsed certificate output remains identical. Source validation passed 29 Go tests, 71 stdio / 77 HTTP / 71 Unix SQL assertions (three cases per transport), build, vet, gofmt and golangci-lint. Metadata scored 100/100 L1 with zero findings. Metadata is checked structurally with example execution disabled because the repository's metadata examples include an external TLS endpoint; the actual offline parsing and loopback TLS behavior are covered by the notebook and repository SQL suites. Source code, tests, Go manifests and checksums remain unchanged.
+[coverage.json](coverage.json) records complete released and current public catalogs
+and maps focused examples to visible executed SQL, results and interpretations.
+The catalog has **14 logical named surfaces**, requiring seven for the fleet target.
+Eight are covered by this offline narrative: fingerprint, subject, issuer, both
+validity boundaries, SANs, CA flag and public-key algorithm. Serial values are
+retained but are not counted merely because they are displayed. The current-clock
+predicate, signature algorithm, long-form info, field-reference view and live TLS
+inspection remain outside this story.
 
-Official Query.Farm Strata Sun and VGI artwork is copied unchanged from the approved assets, with linked Query.Farm branding at the top and bottom.
+Examples execute release v0.4.0. Current-main baseline
+`6f0e8893f5c461f112d2076450869c1bff776475` has the same names and signatures.
+Ten stable scalar outputs agree for all six supplied fixtures across both actual
+runtimes. Current source also refines unknown-algorithm naming; the Ed25519 fixtures
+do not exercise that difference. Reviewed interface coverage is separate from exact
+runtime coverage; the notebook does not claim to execute current-main code.
+
+Repository checks use local loopback TLS fixtures for transport behavior. Structural
+metadata validation skips example execution because metadata contains an external
+TLS endpoint. No external metadata example is run during notebook validation.
+
+Verification passed: 17 executed code cells, nine SQL cells, two SVG charts, twelve
+SQL checks, two count reconciliations and the malformed-input probe. The default
+took 18.0 seconds; the detached horizon-60 run took 5.6 seconds, beginning with no
+fixture companions and retrieving all twelve verified files. All four figures were
+reviewed, and parsed tables, byte-audit results and profile outputs match between
+runs. Three runner protections and two parameter rejections preserve defaults.
+
+A fresh Python 3.12 kernel completed the notebook after base-only installation
+with pandas 2.2.3, Matplotlib 3.10.0, IPython 8.30.0, ipykernel 6.17.1 and
+jupyter-client 7.4.9 already imported. Those versions remained unchanged and
+`pip check` passed. This tests local compatibility, not a manually hosted Colab run.
+Source checks passed 29 Go tests, 71/77/71 SQL assertions over stdio/HTTP/Unix,
+build, vet, formatting, golangci-lint, and metadata (100/100, L1, zero findings).
+Worker source, Go manifests and fixture bytes remain unchanged.
+
+<p><a href="https://query.farm/"><img src="https://raw.githubusercontent.com/Query-farm/vgi-example-notebooks/v0.1.1/assets/query-farm-strata-sun.svg" alt="Query.Farm — Strata Sun" width="252"></a></p>

@@ -1,0 +1,369 @@
+{
+  "comparison": "Ten stable scalar outputs on six committed PEM fixtures are identical between actual released and current runtimes. cert_is_expired excluded because it is clock-sensitive; TLS not contacted.",
+  "results": {
+    "released": {
+      "boundary.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=boundary.example,O=Synthetic notebook fixture",
+            "CN=boundary.example,O=Synthetic notebook fixture",
+            "1003",
+            "2025-12-02 00:00:00",
+            "2026-01-15 00:00:00",
+            "c18d184251c345d4273f00757db5e6f47b51b281e3d07adfee821e2044b467a5",
+            "Ed25519",
+            "Ed25519",
+            [
+              "boundary.example"
+            ],
+            false
+          ]
+        ]
+      },
+      "expired.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=expired.example,O=Synthetic notebook fixture",
+            "CN=expired.example,O=Synthetic notebook fixture",
+            "1001",
+            "2025-11-02 00:00:00",
+            "2025-12-22 00:00:00",
+            "b56139e790b09954c0245d908f6e86e53306f9d333c7ee70a7c5b0bfc8a766f7",
+            "Ed25519",
+            "Ed25519",
+            [
+              "expired.example"
+            ],
+            false
+          ]
+        ]
+      },
+      "future.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=future.example,O=Synthetic notebook fixture",
+            "CN=future.example,O=Synthetic notebook fixture",
+            "1005",
+            "2026-01-11 00:00:00",
+            "2026-04-01 00:00:00",
+            "c72bee97970df98eb4468e09c5aa261036c409e0941455f3e53e7008bb1e13b2",
+            "Ed25519",
+            "Ed25519",
+            [
+              "future.example"
+            ],
+            false
+          ]
+        ]
+      },
+      "later.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=later.example,O=Synthetic notebook fixture",
+            "CN=later.example,O=Synthetic notebook fixture",
+            "1004",
+            "2025-12-02 00:00:00",
+            "2026-02-15 00:00:00",
+            "d75098752d9cdac48335f8e2dba972a2b715f223ecfb0ffdd3d88fda6aecc138",
+            "Ed25519",
+            "Ed25519",
+            [
+              "later.example"
+            ],
+            false
+          ]
+        ]
+      },
+      "long.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=long.example,O=Synthetic notebook fixture",
+            "CN=long.example,O=Synthetic notebook fixture",
+            "1006",
+            "2025-12-02 00:00:00",
+            "2026-05-01 00:00:00",
+            "2d8eb0bfdfc282c197fb893dc7f624c47a93f72df600e64df2bcf3dd2b2371f7",
+            "Ed25519",
+            "Ed25519",
+            [
+              "long.example"
+            ],
+            false
+          ]
+        ]
+      },
+      "shared-soon.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=shared-soon.example,O=Synthetic notebook fixture",
+            "CN=shared-soon.example,O=Synthetic notebook fixture",
+            "1002",
+            "2025-12-02 00:00:00",
+            "2026-01-08 00:00:00",
+            "f04bc8196741c4b94a0a1e08395724f4659eebb5ffc2660ac480b155f557daa8",
+            "Ed25519",
+            "Ed25519",
+            [
+              "shared-soon.example"
+            ],
+            false
+          ]
+        ]
+      }
+    },
+    "current": {
+      "boundary.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=boundary.example,O=Synthetic notebook fixture",
+            "CN=boundary.example,O=Synthetic notebook fixture",
+            "1003",
+            "2025-12-02 00:00:00",
+            "2026-01-15 00:00:00",
+            "c18d184251c345d4273f00757db5e6f47b51b281e3d07adfee821e2044b467a5",
+            "Ed25519",
+            "Ed25519",
+            [
+              "boundary.example"
+            ],
+            false
+          ]
+        ]
+      },
+      "expired.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=expired.example,O=Synthetic notebook fixture",
+            "CN=expired.example,O=Synthetic notebook fixture",
+            "1001",
+            "2025-11-02 00:00:00",
+            "2025-12-22 00:00:00",
+            "b56139e790b09954c0245d908f6e86e53306f9d333c7ee70a7c5b0bfc8a766f7",
+            "Ed25519",
+            "Ed25519",
+            [
+              "expired.example"
+            ],
+            false
+          ]
+        ]
+      },
+      "future.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=future.example,O=Synthetic notebook fixture",
+            "CN=future.example,O=Synthetic notebook fixture",
+            "1005",
+            "2026-01-11 00:00:00",
+            "2026-04-01 00:00:00",
+            "c72bee97970df98eb4468e09c5aa261036c409e0941455f3e53e7008bb1e13b2",
+            "Ed25519",
+            "Ed25519",
+            [
+              "future.example"
+            ],
+            false
+          ]
+        ]
+      },
+      "later.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=later.example,O=Synthetic notebook fixture",
+            "CN=later.example,O=Synthetic notebook fixture",
+            "1004",
+            "2025-12-02 00:00:00",
+            "2026-02-15 00:00:00",
+            "d75098752d9cdac48335f8e2dba972a2b715f223ecfb0ffdd3d88fda6aecc138",
+            "Ed25519",
+            "Ed25519",
+            [
+              "later.example"
+            ],
+            false
+          ]
+        ]
+      },
+      "long.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=long.example,O=Synthetic notebook fixture",
+            "CN=long.example,O=Synthetic notebook fixture",
+            "1006",
+            "2025-12-02 00:00:00",
+            "2026-05-01 00:00:00",
+            "2d8eb0bfdfc282c197fb893dc7f624c47a93f72df600e64df2bcf3dd2b2371f7",
+            "Ed25519",
+            "Ed25519",
+            [
+              "long.example"
+            ],
+            false
+          ]
+        ]
+      },
+      "shared-soon.pem": {
+        "columns": [
+          "cert_subject",
+          "cert_issuer",
+          "cert_serial",
+          "cert_not_before",
+          "cert_not_after",
+          "cert_fingerprint",
+          "cert_key_algorithm",
+          "cert_signature_algorithm",
+          "cert_sans",
+          "cert_is_ca"
+        ],
+        "rows": [
+          [
+            "CN=shared-soon.example,O=Synthetic notebook fixture",
+            "CN=shared-soon.example,O=Synthetic notebook fixture",
+            "1002",
+            "2025-12-02 00:00:00",
+            "2026-01-08 00:00:00",
+            "f04bc8196741c4b94a0a1e08395724f4659eebb5ffc2660ac480b155f557daa8",
+            "Ed25519",
+            "Ed25519",
+            [
+              "shared-soon.example"
+            ],
+            false
+          ]
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,561 @@
+{
+  "query": "SELECT * FROM duckdb_functions() WHERE database_name='x509' ORDER BY schema_name,function_name",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "function_name",
+    "alias_of",
+    "function_type",
+    "description",
+    "comment",
+    "tags",
+    "return_type",
+    "parameters",
+    "parameter_types",
+    "varargs",
+    "macro_definition",
+    "has_side_effects",
+    "internal",
+    "extension_name",
+    "function_oid",
+    "examples",
+    "stability",
+    "categories"
+  ],
+  "rows": [
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_fingerprint",
+      null,
+      "scalar",
+      "SHA-256 fingerprint of the certificate (lowercase hex)",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return the SHA-256 fingerprint of the certificate's DER encoding as lowercase hex. Use it to uniquely identify or pin a certificate. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
+        "vgi.doc_md": "Compute the SHA-256 fingerprint of the certificate (lowercase hex).",
+        "vgi.example_queries": "[{\"description\":\"Compute the SHA-256 fingerprint of a PEM certificate (lowercase hex).\",\"sql\":\"SELECT x509.main.cert_fingerprint('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"}]",
+        "vgi.executable_examples": "[{\"description\":\"SHA-256 fingerprint of the certificate (lowercase hex)\",\"sql\":\"SELECT x509.main.cert_fingerprint('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_fingerprint\"}]",
+        "vgi.keywords": "[\"fingerprint\",\"sha256\",\"thumbprint\",\"hash\",\"certificate pinning\",\"cert_fingerprint\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate SHA-256 Fingerprint"
+      },
+      "VARCHAR",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22726,
+      [
+        "SELECT x509.main.cert_fingerprint('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_info",
+      null,
+      "table",
+      "Long-format dump of all certificate attributes (one row per field)",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Dump every attribute of a certificate as long-format (field, value) rows: subject, issuer, serial, validity window, expiry status, key and signature algorithms, SHA-256 fingerprint, CA flag, and subject alternative names. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); a constant cert argument (table functions cannot take a subquery). NULL input yields zero rows.",
+        "vgi.doc_md": "Long-format dump of all certificate attributes as `(field, value)` rows.",
+        "vgi.example_queries": "[{\"description\":\"Pick the identity and trust-relevant attributes (subject, issuer, expiry, CA flag) from a certificate.\",\"sql\":\"SELECT field, value FROM x509.main.cert_info('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') WHERE field IN ('subject', 'issuer', 'not_after', 'is_ca') ORDER BY field;\"}]",
+        "vgi.executable_examples": "[{\"description\":\"Dump every attribute of a certificate as (field, value) rows, ordered by field.\",\"sql\":\"SELECT field, value FROM x509.main.cert_info('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') ORDER BY field\"}]",
+        "vgi.keywords": "[\"cert info\",\"certificate fields\",\"dump\",\"inspect certificate\",\"attributes\",\"long format\",\"cert_info\",\"x509\",\"certificate\"]",
+        "vgi.result_columns_schema": "[{\"name\":\"field\",\"type\":\"VARCHAR\",\"description\":\"The certificate attribute name (e.g. subject, issuer, serial, not_after, is_ca).\"},{\"name\":\"value\",\"type\":\"VARCHAR\",\"description\":\"The attribute's value rendered as text.\"}]",
+        "vgi.title": "Certificate Field Dump"
+      },
+      null,
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22737,
+      [
+        "SELECT field, value FROM x509.main.cert_info('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----') WHERE field IN ('subject', 'issuer', 'not_after', 'is_ca') ORDER BY field;"
+      ],
+      null,
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_is_ca",
+      null,
+      "scalar",
+      "Whether the certificate is a CA certificate",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return whether the certificate is a CA certificate (basic constraints CA=true). Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
+        "vgi.doc_md": "Check whether the certificate is a CA certificate.",
+        "vgi.example_queries": "[{\"description\":\"Check whether a PEM certificate is a CA certificate.\",\"sql\":\"SELECT x509.main.cert_is_ca('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"}]",
+        "vgi.executable_examples": "[{\"description\":\"Whether the certificate is a CA certificate\",\"sql\":\"SELECT x509.main.cert_is_ca('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_is_ca\"}]",
+        "vgi.keywords": "[\"ca\",\"certificate authority\",\"basic constraints\",\"is ca\",\"intermediate\",\"root\",\"cert_is_ca\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate CA Flag"
+      },
+      "BOOLEAN",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22727,
+      [
+        "SELECT x509.main.cert_is_ca('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_is_expired",
+      null,
+      "scalar",
+      "Whether the certificate is outside its validity window now",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return whether the certificate is currently outside its validity window (before not_before or after not_after relative to now). Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
+        "vgi.doc_md": "Check whether the certificate is currently expired (outside its validity window).",
+        "vgi.example_queries": "[{\"description\":\"Check whether a PEM certificate is currently outside its validity window.\",\"sql\":\"SELECT x509.main.cert_is_expired('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"},{\"description\":\"Hostname coverage: for each required hostname, the inventory certificate whose SANs list it and whether it is valid now. Here alt is covered by a valid certificate, legacy only by an expired one, www by none (NULL).\",\"sql\":\"WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\\n-----END CERTIFICATE-----')), hosts(host) AS (VALUES ('alt.vgi-x509.example'), ('legacy.vgi-x509.example'), ('www.vgi-x509.example')) SELECT r.host, i.name AS covered_by, NOT x509.main.cert_is_expired(i.pem) AS valid_now FROM hosts AS r LEFT JOIN certs AS i ON list_contains(x509.main.cert_sans(i.pem), r.host) ORDER BY r.host\"}]",
+        "vgi.executable_examples": "[{\"description\":\"Whether the certificate is outside its validity window now\",\"sql\":\"SELECT x509.main.cert_is_expired('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_is_expired\"}]",
+        "vgi.keywords": "[\"expired\",\"expiry\",\"validity\",\"not after\",\"not before\",\"valid now\",\"cert_is_expired\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate Expiry Check"
+      },
+      "BOOLEAN",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22728,
+      [
+        "SELECT x509.main.cert_is_expired('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');",
+        "WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\n-----END CERTIFICATE-----')), hosts(host) AS (VALUES ('alt.vgi-x509.example'), ('legacy.vgi-x509.example'), ('www.vgi-x509.example')) SELECT r.host, i.name AS covered_by, NOT x509.main.cert_is_expired(i.pem) AS valid_now FROM hosts AS r LEFT JOIN certs AS i ON list_contains(x509.main.cert_sans(i.pem), r.host) ORDER BY r.host"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_issuer",
+      null,
+      "scalar",
+      "Certificate issuer as an RFC 2253 distinguished name",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return the issuer of a certificate as an RFC 2253 distinguished name (the CA that signed it). Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
+        "vgi.doc_md": "Read the certificate's issuer as an RFC 2253 distinguished name.",
+        "vgi.example_queries": "[{\"description\":\"Read the issuer distinguished name of a PEM certificate.\",\"sql\":\"SELECT x509.main.cert_issuer('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"}]",
+        "vgi.executable_examples": "[{\"description\":\"Certificate issuer as an RFC 2253 distinguished name\",\"sql\":\"SELECT x509.main.cert_issuer('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_issuer\"}]",
+        "vgi.keywords": "[\"issuer\",\"distinguished name\",\"dn\",\"ca\",\"signing authority\",\"cert_issuer\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate Issuer Name"
+      },
+      "VARCHAR",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22729,
+      [
+        "SELECT x509.main.cert_issuer('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_key_algorithm",
+      null,
+      "scalar",
+      "Public-key algorithm with size/curve (e.g. RSA-2048, ECDSA-P256, Ed25519)",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return the certificate's subject public-key algorithm together with its key size or curve, as a `VARCHAR` built by this worker (not Go's bare algorithm name). The value follows a fixed convention: RSA keys render as `RSA-<bits>` where <bits> is the modulus size, typically `RSA-2048`, `RSA-3072` or `RSA-4096`; ECDSA keys render as `ECDSA-<curve>` with the curve name stripped of its hyphen, i.e. `ECDSA-P256`, `ECDSA-P384`, `ECDSA-P521`; Edwards keys render as the single token `Ed25519`, and X25519, X448 and Ed448 keys as `X25519`, `X448`, `Ed448`. Any other key type Go recognises falls back to Go's public-key algorithm name (e.g. `DSA`, `ML-DSA`); an unrecognised key algorithm yields `Unknown`. For a security audit, RSA moduli below 2048 bits are considered weak. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL. Example: the committed fixture certificate carries a P-256 ECDSA key and returns `ECDSA-P256`.",
+        "vgi.doc_md": "Read the public-key algorithm with its size or curve: `RSA-<bits>` (e.g. `RSA-2048`), `ECDSA-<curve>` (e.g. `ECDSA-P256`), or `Ed25519`. RSA moduli under 2048 bits are weak.",
+        "vgi.example_queries": "[{\"description\":\"Read the public-key algorithm and size/curve of a PEM certificate (the fixture returns ECDSA-P256).\",\"sql\":\"SELECT x509.main.cert_key_algorithm('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"},{\"description\":\"Compliance audit of a certificate inventory: expiry, key algorithm and policy findings per certificate. The legacy sample is expired, RSA-1024 and SHA-1 signed; the test sample is self-signed with a 10-year lifetime.\",\"sql\":\"WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\\n-----END CERTIFICATE-----')) SELECT name, x509.main.cert_not_after(pem) AS not_after, x509.main.cert_key_algorithm(pem) AS key_algorithm, list_filter([CASE WHEN x509.main.cert_is_expired(pem) THEN 'not currently valid' END, CASE WHEN timezone('UTC', not_after) BETWEEN now() AND now() + INTERVAL 30 DAY THEN 'expires within 30 days' END, CASE WHEN TRY_CAST(regexp_extract(key_algorithm, '^RSA-(\\\\d+)$', 1) AS INTEGER) \\u003c 2048 THEN 'RSA under 2048 bits' END, CASE WHEN regexp_matches(x509.main.cert_signature_algorithm(pem), 'SHA1|MD5') THEN 'SHA-1 or MD5 signature' END, CASE WHEN date_diff('day', x509.main.cert_not_before(pem), not_after) \\u003e 398 THEN 'lifetime over 398 days' END, CASE WHEN x509.main.cert_issuer(pem) = x509.main.cert_subject(pem) THEN 'self-signed' END], lambda f: f IS NOT NULL) AS findings FROM certs ORDER BY not_after\"}]",
+        "vgi.executable_examples": "[{\"description\":\"Public-key algorithm with size/curve (e.g. RSA-2048, ECDSA-P256, Ed25519)\",\"sql\":\"SELECT x509.main.cert_key_algorithm('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_key_algorithm\"}]",
+        "vgi.keywords": "[\"key algorithm\",\"public key\",\"rsa\",\"ecdsa\",\"ed25519\",\"curve\",\"key size\",\"key strength\",\"cert_key_algorithm\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate Public-Key Algorithm"
+      },
+      "VARCHAR",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22730,
+      [
+        "SELECT x509.main.cert_key_algorithm('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');",
+        "WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\n-----END CERTIFICATE-----')) SELECT name, x509.main.cert_not_after(pem) AS not_after, x509.main.cert_key_algorithm(pem) AS key_algorithm, list_filter([CASE WHEN x509.main.cert_is_expired(pem) THEN 'not currently valid' END, CASE WHEN timezone('UTC', not_after) BETWEEN now() AND now() + INTERVAL 30 DAY THEN 'expires within 30 days' END, CASE WHEN TRY_CAST(regexp_extract(key_algorithm, '^RSA-(\\d+)$', 1) AS INTEGER) < 2048 THEN 'RSA under 2048 bits' END, CASE WHEN regexp_matches(x509.main.cert_signature_algorithm(pem), 'SHA1|MD5') THEN 'SHA-1 or MD5 signature' END, CASE WHEN date_diff('day', x509.main.cert_not_before(pem), not_after) > 398 THEN 'lifetime over 398 days' END, CASE WHEN x509.main.cert_issuer(pem) = x509.main.cert_subject(pem) THEN 'self-signed' END], lambda f: f IS NOT NULL) AS findings FROM certs ORDER BY not_after"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_not_after",
+      null,
+      "scalar",
+      "End of the certificate validity window (UTC)",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return the end of the certificate's validity window (notAfter / expiry) as a UTC `TIMESTAMP`. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
+        "vgi.doc_md": "Read the certificate expiry (`notAfter`, end of validity window, UTC).",
+        "vgi.example_queries": "[{\"description\":\"Read the expiry (end of validity window) of a PEM certificate (UTC).\",\"sql\":\"SELECT x509.main.cert_not_after('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"},{\"description\":\"Compliance audit of a certificate inventory: expiry, key algorithm and policy findings per certificate. The legacy sample is expired, RSA-1024 and SHA-1 signed; the test sample is self-signed with a 10-year lifetime.\",\"sql\":\"WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\\n-----END CERTIFICATE-----')) SELECT name, x509.main.cert_not_after(pem) AS not_after, x509.main.cert_key_algorithm(pem) AS key_algorithm, list_filter([CASE WHEN x509.main.cert_is_expired(pem) THEN 'not currently valid' END, CASE WHEN timezone('UTC', not_after) BETWEEN now() AND now() + INTERVAL 30 DAY THEN 'expires within 30 days' END, CASE WHEN TRY_CAST(regexp_extract(key_algorithm, '^RSA-(\\\\d+)$', 1) AS INTEGER) \\u003c 2048 THEN 'RSA under 2048 bits' END, CASE WHEN regexp_matches(x509.main.cert_signature_algorithm(pem), 'SHA1|MD5') THEN 'SHA-1 or MD5 signature' END, CASE WHEN date_diff('day', x509.main.cert_not_before(pem), not_after) \\u003e 398 THEN 'lifetime over 398 days' END, CASE WHEN x509.main.cert_issuer(pem) = x509.main.cert_subject(pem) THEN 'self-signed' END], lambda f: f IS NOT NULL) AS findings FROM certs ORDER BY not_after\"}]",
+        "vgi.executable_examples": "[{\"description\":\"End of the certificate validity window (UTC)\",\"sql\":\"SELECT x509.main.cert_not_after('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_not_after\"}]",
+        "vgi.keywords": "[\"not after\",\"expiry\",\"valid until\",\"validity end\",\"expiration\",\"cert_not_after\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate Expiry Time"
+      },
+      "TIMESTAMP",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22731,
+      [
+        "SELECT x509.main.cert_not_after('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');",
+        "WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\n-----END CERTIFICATE-----')) SELECT name, x509.main.cert_not_after(pem) AS not_after, x509.main.cert_key_algorithm(pem) AS key_algorithm, list_filter([CASE WHEN x509.main.cert_is_expired(pem) THEN 'not currently valid' END, CASE WHEN timezone('UTC', not_after) BETWEEN now() AND now() + INTERVAL 30 DAY THEN 'expires within 30 days' END, CASE WHEN TRY_CAST(regexp_extract(key_algorithm, '^RSA-(\\d+)$', 1) AS INTEGER) < 2048 THEN 'RSA under 2048 bits' END, CASE WHEN regexp_matches(x509.main.cert_signature_algorithm(pem), 'SHA1|MD5') THEN 'SHA-1 or MD5 signature' END, CASE WHEN date_diff('day', x509.main.cert_not_before(pem), not_after) > 398 THEN 'lifetime over 398 days' END, CASE WHEN x509.main.cert_issuer(pem) = x509.main.cert_subject(pem) THEN 'self-signed' END], lambda f: f IS NOT NULL) AS findings FROM certs ORDER BY not_after"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_not_before",
+      null,
+      "scalar",
+      "Start of the certificate validity window (UTC)",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return the start of the certificate's validity window (notBefore) as a UTC `TIMESTAMP`. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
+        "vgi.doc_md": "Read the start of the certificate validity window (`notBefore`, UTC).",
+        "vgi.example_queries": "[{\"description\":\"Read the start of a PEM certificate's validity window (UTC).\",\"sql\":\"SELECT x509.main.cert_not_before('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"}]",
+        "vgi.executable_examples": "[{\"description\":\"Start of the certificate validity window (UTC)\",\"sql\":\"SELECT x509.main.cert_not_before('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_not_before\"}]",
+        "vgi.keywords": "[\"not before\",\"valid from\",\"validity start\",\"issued\",\"cert_not_before\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate Valid-From Time"
+      },
+      "TIMESTAMP",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22732,
+      [
+        "SELECT x509.main.cert_not_before('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_sans",
+      null,
+      "scalar",
+      "Subject alternative names (DNS names + IP addresses) as a `VARCHAR` list",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return the subject alternative names of a certificate as a `VARCHAR` list: the DNS names followed by the IP addresses from the SAN extension. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`). NULL input yields NULL.",
+        "vgi.doc_md": "List the certificate's subject alternative names (DNS names then IP addresses) as a `VARCHAR[]`.",
+        "vgi.example_queries": "[{\"description\":\"List the subject alternative names (DNS names and IP addresses) of a PEM certificate.\",\"sql\":\"SELECT x509.main.cert_sans('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"},{\"description\":\"Hostname coverage: for each required hostname, the inventory certificate whose SANs list it and whether it is valid now. Here alt is covered by a valid certificate, legacy only by an expired one, www by none (NULL).\",\"sql\":\"WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\\n-----END CERTIFICATE-----')), hosts(host) AS (VALUES ('alt.vgi-x509.example'), ('legacy.vgi-x509.example'), ('www.vgi-x509.example')) SELECT r.host, i.name AS covered_by, NOT x509.main.cert_is_expired(i.pem) AS valid_now FROM hosts AS r LEFT JOIN certs AS i ON list_contains(x509.main.cert_sans(i.pem), r.host) ORDER BY r.host\"}]",
+        "vgi.executable_examples": "[{\"description\":\"List the subject alternative names (DNS names then IP addresses).\",\"sql\":\"SELECT x509.main.cert_sans('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_sans\"}]",
+        "vgi.keywords": "[\"san\",\"subject alternative names\",\"dns names\",\"ip addresses\",\"alt names\",\"hostnames\",\"cert_sans\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate Subject Alternative Names"
+      },
+      "VARCHAR[]",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22733,
+      [
+        "SELECT x509.main.cert_sans('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');",
+        "WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\n-----END CERTIFICATE-----')), hosts(host) AS (VALUES ('alt.vgi-x509.example'), ('legacy.vgi-x509.example'), ('www.vgi-x509.example')) SELECT r.host, i.name AS covered_by, NOT x509.main.cert_is_expired(i.pem) AS valid_now FROM hosts AS r LEFT JOIN certs AS i ON list_contains(x509.main.cert_sans(i.pem), r.host) ORDER BY r.host"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_serial",
+      null,
+      "scalar",
+      "Certificate serial number (decimal string)",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return the certificate serial number as a decimal string. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
+        "vgi.doc_md": "Read the certificate serial number as a decimal string.",
+        "vgi.example_queries": "[{\"description\":\"Read the serial number of a PEM certificate as a decimal string.\",\"sql\":\"SELECT x509.main.cert_serial('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"}]",
+        "vgi.executable_examples": "[{\"description\":\"Certificate serial number (decimal string)\",\"sql\":\"SELECT x509.main.cert_serial('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_serial\"}]",
+        "vgi.keywords": "[\"serial\",\"serial number\",\"cert_serial\",\"identifier\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate Serial Number"
+      },
+      "VARCHAR",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22734,
+      [
+        "SELECT x509.main.cert_serial('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_signature_algorithm",
+      null,
+      "scalar",
+      "Certificate signature algorithm (Go crypto/x509 canonical name, e.g. ECDSA-SHA256)",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return the algorithm the issuing CA used to sign this certificate, as a `VARCHAR`. The value is Go crypto/x509's canonical name for the algorithm and is drawn from a fixed vocabulary: for RSA PKCS#1 v1.5, `SHA256-RSA`, `SHA384-RSA`, `SHA512-RSA` (and the legacy `SHA1-RSA`, `MD5-RSA`); for RSA-PSS, `SHA256-RSAPSS`, `SHA384-RSAPSS`, `SHA512-RSAPSS`; for ECDSA, `ECDSA-SHA256`, `ECDSA-SHA384`, `ECDSA-SHA512` (and legacy `ECDSA-SHA1`); for DSA, `DSA-SHA1`, `DSA-SHA256`; `Ed25519`; and `ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87`. An unrecognised OID, including the obsolete MD2-RSA, yields `Unknown`. Note the ordering convention differs by family \u2014 RSA/DSA render as hash-then-key (`SHA256-RSA`) while ECDSA renders as key-then-hash (`ECDSA-SHA256`) \u2014 so match on the whole token, not a positional split. For a security audit, the SHA-1 and MD5 variants (and `Unknown`) are considered weak/deprecated and are the ones worth flagging. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL. Example: the committed fixture certificate is P-256 ECDSA and returns `ECDSA-SHA256`.",
+        "vgi.doc_md": "Read the certificate signature algorithm as Go crypto/x509's canonical name (e.g. `ECDSA-SHA256`, `SHA256-RSA`, `Ed25519`). The value comes from a fixed vocabulary; the SHA-1/MD5 variants are weak and worth flagging in an audit.",
+        "vgi.example_queries": "[{\"description\":\"Read the signature algorithm of a PEM certificate (the fixture returns ECDSA-SHA256).\",\"sql\":\"SELECT x509.main.cert_signature_algorithm('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"},{\"description\":\"Compliance audit of a certificate inventory: expiry, key algorithm and policy findings per certificate. The legacy sample is expired, RSA-1024 and SHA-1 signed; the test sample is self-signed with a 10-year lifetime.\",\"sql\":\"WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\\n-----END CERTIFICATE-----')) SELECT name, x509.main.cert_not_after(pem) AS not_after, x509.main.cert_key_algorithm(pem) AS key_algorithm, list_filter([CASE WHEN x509.main.cert_is_expired(pem) THEN 'not currently valid' END, CASE WHEN timezone('UTC', not_after) BETWEEN now() AND now() + INTERVAL 30 DAY THEN 'expires within 30 days' END, CASE WHEN TRY_CAST(regexp_extract(key_algorithm, '^RSA-(\\\\d+)$', 1) AS INTEGER) \\u003c 2048 THEN 'RSA under 2048 bits' END, CASE WHEN regexp_matches(x509.main.cert_signature_algorithm(pem), 'SHA1|MD5') THEN 'SHA-1 or MD5 signature' END, CASE WHEN date_diff('day', x509.main.cert_not_before(pem), not_after) \\u003e 398 THEN 'lifetime over 398 days' END, CASE WHEN x509.main.cert_issuer(pem) = x509.main.cert_subject(pem) THEN 'self-signed' END], lambda f: f IS NOT NULL) AS findings FROM certs ORDER BY not_after\"}]",
+        "vgi.executable_examples": "[{\"description\":\"Certificate signature algorithm (Go crypto/x509 canonical name, e.g. ECDSA-SHA256)\",\"sql\":\"SELECT x509.main.cert_signature_algorithm('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_signature_algorithm\"}]",
+        "vgi.keywords": "[\"signature algorithm\",\"signing algorithm\",\"sha256\",\"sha1\",\"weak signature\",\"ecdsa\",\"rsa\",\"rsapss\",\"ed25519\",\"cert_signature_algorithm\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate Signature Algorithm"
+      },
+      "VARCHAR",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22735,
+      [
+        "SELECT x509.main.cert_signature_algorithm('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');",
+        "WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\n-----END CERTIFICATE-----')) SELECT name, x509.main.cert_not_after(pem) AS not_after, x509.main.cert_key_algorithm(pem) AS key_algorithm, list_filter([CASE WHEN x509.main.cert_is_expired(pem) THEN 'not currently valid' END, CASE WHEN timezone('UTC', not_after) BETWEEN now() AND now() + INTERVAL 30 DAY THEN 'expires within 30 days' END, CASE WHEN TRY_CAST(regexp_extract(key_algorithm, '^RSA-(\\d+)$', 1) AS INTEGER) < 2048 THEN 'RSA under 2048 bits' END, CASE WHEN regexp_matches(x509.main.cert_signature_algorithm(pem), 'SHA1|MD5') THEN 'SHA-1 or MD5 signature' END, CASE WHEN date_diff('day', x509.main.cert_not_before(pem), not_after) > 398 THEN 'lifetime over 398 days' END, CASE WHEN x509.main.cert_issuer(pem) = x509.main.cert_subject(pem) THEN 'self-signed' END], lambda f: f IS NOT NULL) AS findings FROM certs ORDER BY not_after"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "cert_subject",
+      null,
+      "scalar",
+      "Certificate subject as an RFC 2253 distinguished name",
+      null,
+      {
+        "vgi.category": "Certificate parsing",
+        "vgi.doc_llm": "Return the subject of a certificate as an RFC 2253 distinguished name (e.g. CN=..,O=..). Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
+        "vgi.doc_md": "Read the certificate's subject as an RFC 2253 distinguished name.",
+        "vgi.example_queries": "[{\"description\":\"Read the subject distinguished name of a PEM certificate.\",\"sql\":\"SELECT x509.main.cert_subject('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----');\"}]",
+        "vgi.executable_examples": "[{\"description\":\"Certificate subject as an RFC 2253 distinguished name\",\"sql\":\"SELECT x509.main.cert_subject('-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----') AS cert_subject\"}]",
+        "vgi.keywords": "[\"subject\",\"distinguished name\",\"dn\",\"common name\",\"cn\",\"cert_subject\",\"x509\",\"certificate\"]",
+        "vgi.title": "Certificate Subject Name"
+      },
+      "VARCHAR",
+      [
+        "cert"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22736,
+      [
+        "SELECT x509.main.cert_subject('-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----');"
+      ],
+      "CONSISTENT",
+      [
+        "x509",
+        "certificate"
+      ]
+    ],
+    [
+      "x509",
+      "22592",
+      "main",
+      "tls_inspect",
+      null,
+      "table",
+      "Connect to a TLS host:port and return the presented certificate chain (AUTHORIZED endpoints only)",
+      null,
+      {
+        "vgi.category": "TLS endpoints",
+        "vgi.doc_llm": "Connect to a live TLS endpoint given as host:port and return the certificate chain the server presents, one row per certificate (seq, subject, issuer, validity window, CA flag, SHA-256 fingerprint). Defensive inspection only: it opens a network connection, so use AUTHORIZED endpoints only. insecure defaults to true so it inspects whatever is presented (expired / self-signed included); the dial and handshake are bounded by timeout_ms.",
+        "vgi.doc_md": "Connect to a TLS `host:port` and return the presented certificate chain (AUTHORIZED endpoints only).",
+        "vgi.example_queries": "[{\"description\":\"Inspect the leaf certificate a TLS endpoint presents (AUTHORIZED endpoints only): its subject, issuer, and CA flag.\",\"sql\":\"SELECT seq, subject, issuer, is_ca FROM x509.main.tls_inspect('example.com:443') WHERE seq = 0;\"},{\"description\":\"Which inventory certificate a server is serving (AUTHORIZED endpoints only): join each certificate in the presented chain (tls_inspect) to an inventory on cert_fingerprint. inventory_name is NULL for a certificate that is not in the inventory, which is every row for example.com against the two samples.\",\"sql\":\"WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\\n-----END CERTIFICATE-----')) SELECT t.seq, t.subject, t.not_after, i.name AS inventory_name FROM x509.main.tls_inspect('example.com:443') AS t LEFT JOIN certs AS i ON x509.main.cert_fingerprint(i.pem) = t.fingerprint ORDER BY t.seq\"}]",
+        "vgi.keywords": "[\"tls\",\"tls inspect\",\"certificate chain\",\"handshake\",\"endpoint\",\"host port\",\"sni\",\"tls_inspect\",\"x509\",\"server certificate\"]",
+        "vgi.result_columns_schema": "[{\"name\":\"seq\",\"type\":\"INTEGER\",\"description\":\"Position in the presented chain (0 = leaf/server certificate).\"},{\"name\":\"subject\",\"type\":\"VARCHAR\",\"description\":\"Certificate subject as an RFC 2253 distinguished name.\"},{\"name\":\"issuer\",\"type\":\"VARCHAR\",\"description\":\"Certificate issuer as an RFC 2253 distinguished name.\"},{\"name\":\"not_before\",\"type\":\"TIMESTAMP\",\"description\":\"Start of the certificate validity window (UTC).\"},{\"name\":\"not_after\",\"type\":\"TIMESTAMP\",\"description\":\"End of the certificate validity window (UTC).\"},{\"name\":\"is_ca\",\"type\":\"BOOLEAN\",\"description\":\"Whether the certificate is a CA certificate.\"},{\"name\":\"fingerprint\",\"type\":\"VARCHAR\",\"description\":\"SHA-256 fingerprint of the certificate (lowercase hex).\"}]",
+        "vgi.title": "Live TLS Endpoint Inspector"
+      },
+      null,
+      [
+        "host_port",
+        "insecure",
+        "server_name",
+        "timeout_ms"
+      ],
+      [
+        "VARCHAR",
+        "BOOLEAN",
+        "VARCHAR",
+        "BIGINT"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22738,
+      [
+        "SELECT seq, subject, issuer, is_ca FROM x509.main.tls_inspect('example.com:443') WHERE seq = 0;",
+        "WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----\nMIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\nWDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\nMjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\nOt2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\nAf8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\nHREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\ncGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\nKBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----\nMIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\nOSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\nMTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\ndHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\nhvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\na9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\ndrwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\nlr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\nMAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\nriO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\n-----END CERTIFICATE-----')) SELECT t.seq, t.subject, t.not_after, i.name AS inventory_name FROM x509.main.tls_inspect('example.com:443') AS t LEFT JOIN certs AS i ON x509.main.cert_fingerprint(i.pem) = t.fingerprint ORDER BY t.seq"
+      ],
+      null,
+      [
+        "x509",
+        "tls"
+      ]
+    ]
+  ]
+}

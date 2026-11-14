@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "repository": "Query-farm/vgi-x509",
+  "revision": "6f0e8893f5c461f112d2076450869c1bff776475",
+  "captured_at": "2026-11-14T18:51:58.153223+00:00",
+  "default_schema": "main",
+  "scope": "all_public_functions_and_tables",
+  "complete": true,
+  "objects": [
+    {
+      "schema": "main",
+      "name": "cert_fingerprint",
+      "kind": "function",
+      "signatures": [
+        "cert_fingerprint(ANY) -> VARCHAR"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_info",
+      "kind": "function",
+      "signatures": [
+        "cert_info(ANY) -> None"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_is_ca",
+      "kind": "function",
+      "signatures": [
+        "cert_is_ca(ANY) -> BOOLEAN"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_is_expired",
+      "kind": "function",
+      "signatures": [
+        "cert_is_expired(ANY) -> BOOLEAN"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_issuer",
+      "kind": "function",
+      "signatures": [
+        "cert_issuer(ANY) -> VARCHAR"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_key_algorithm",
+      "kind": "function",
+      "signatures": [
+        "cert_key_algorithm(ANY) -> VARCHAR"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_not_after",
+      "kind": "function",
+      "signatures": [
+        "cert_not_after(ANY) -> TIMESTAMP"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_not_before",
+      "kind": "function",
+      "signatures": [
+        "cert_not_before(ANY) -> TIMESTAMP"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_sans",
+      "kind": "function",
+      "signatures": [
+        "cert_sans(ANY) -> VARCHAR[]"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_serial",
+      "kind": "function",
+      "signatures": [
+        "cert_serial(ANY) -> VARCHAR"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_signature_algorithm",
+      "kind": "function",
+      "signatures": [
+        "cert_signature_algorithm(ANY) -> VARCHAR"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_subject",
+      "kind": "function",
+      "signatures": [
+        "cert_subject(ANY) -> VARCHAR"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "tls_inspect",
+      "kind": "function",
+      "signatures": [
+        "tls_inspect(VARCHAR, BOOLEAN, VARCHAR, BIGINT) -> None"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "cert_fields",
+      "kind": "table",
+      "signatures": [
+        "VIEW(field VARCHAR, scalar_function VARCHAR, result_type VARCHAR, description VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "coverage/current-functions.json",
+      "sha256": "34464bef50250eac6aa0360c82a0bfda038788d482543d4826cc38e5cf5e7b8a",
+      "description": "Complete actual current runtime functions export"
+    },
+    {
+      "path": "coverage/current-tables.json",
+      "sha256": "b88089c08fd282ce8a50ee6b84816beffd9875bd918d391e451141d7692a862b",
+      "description": "Complete actual current runtime tables export"
+    },
+    {
+      "path": "coverage/current-views.json",
+      "sha256": "adf7789690932279877aa8a2b943a71cbf48fbc2464c225249aa93cf4dbe183e",
+      "description": "Complete actual current runtime views export"
+    }
+  ]
+}

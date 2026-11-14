@@ -7,11 +7,13 @@
 //
 // Usage:
 //
-//	mockserver [--addr 127.0.0.1:0]
+//	mockserver [--addr 127.0.0.1:0] [--cert-out <path>]
 //
 // On startup it prints "PORT:<n>" (the bound TCP port) and "CN:<commonName>"
 // (the certificate subject CN) to stdout so a caller can discover both even
-// when binding to :0.
+// when binding to :0. With --cert-out it also writes the certificate it
+// presents as PEM to <path>, so a test can check that tls_inspect's fingerprint
+// equals cert_fingerprint over the same certificate (a positive pin match).
 package main
 
 import (
@@ -33,6 +35,7 @@ const mockCN = "mock.tls.local"
 
 func main() {
 	addr := flag.String("addr", "127.0.0.1:0", "TCP address to listen on (host:port; port 0 = pick a free port)")
+	certOut := flag.String("cert-out", "", "Write the presented certificate as PEM to this path")
 	flag.Parse()
 
 	spec := testca.Default()
@@ -41,6 +44,12 @@ func main() {
 	gen, err := testca.Generate(spec)
 	if err != nil {
 		log.Fatalf("mockserver: generate cert: %v", err)
+	}
+
+	if *certOut != "" {
+		if err := os.WriteFile(*certOut, gen.PEM, 0o644); err != nil { //nolint:gosec // public certificate, not a secret
+			log.Fatalf("mockserver: write %q: %v", *certOut, err)
+		}
 	}
 
 	cfg := &tls.Config{Certificates: []tls.Certificate{gen.TLSCert}}

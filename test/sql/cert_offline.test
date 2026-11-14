@@ -10,7 +10,7 @@ statement ok
 LOAD vgi;
 
 statement ok
-ATTACH 'x509' AS x509 (TYPE vgi, LOCATION '${VGI_X509_WORKER}');
+ATTACH 'x509' AS x509 (TYPE vgi, LOCATION '{VGI_X509_WORKER}');
 
 # A committed self-signed fixture certificate (PEM). Generated once with known
 # subject / validity / SANs so these assertions are stable. CN is
@@ -144,6 +144,100 @@ KBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0
 -----END CERTIFICATE-----') WHERE field = 'fingerprint_sha256';
 ----
 9e35a0b16a0912d01fc75093fd8ab5500f0a425e6b91110c0054f66bb7df5b16
+
+# ---- second fixture: a legacy, CA-issued, RSA-1024 / ECDSA-SHA1 certificate ----
+# (legacyPEM in internal/x509worker/meta.go: expired 2016-01-01, serial 1001.)
+
+statement ok
+CREATE TABLE certs AS SELECT 'test' AS name, pem FROM fixture;
+
+statement ok
+INSERT INTO certs VALUES ('legacy', '-----BEGIN CERTIFICATE-----
+MIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw
+OSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw
+MTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4
+dHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI
+hvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt
+a9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh
+drwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0
+lr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl
+MAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa
+riO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=
+-----END CERTIFICATE-----');
+
+query TTTTTT
+SELECT name, x509.cert_serial(pem), x509.cert_key_algorithm(pem), x509.cert_signature_algorithm(pem),
+       x509.cert_is_expired(pem), x509.cert_issuer(pem) = x509.cert_subject(pem)
+FROM certs ORDER BY name;
+----
+legacy	1001	RSA-1024	ECDSA-SHA1	true	false
+test	987654321	ECDSA-P256	ECDSA-SHA256	false	true
+
+# ---- composed examples (ComposedPolicyAuditExample / ComposedHostCoverageExample) ----
+
+# Compliance audit: one row per certificate with its policy findings.
+query TTTT
+SELECT name, x509.main.cert_not_after(pem) AS not_after,
+       x509.main.cert_key_algorithm(pem) AS key_algorithm, list_filter([
+  CASE WHEN x509.main.cert_is_expired(pem) THEN 'not currently valid' END,
+  CASE WHEN timezone('UTC', not_after) BETWEEN now() AND now() + INTERVAL 30 DAY THEN 'expires within 30 days' END,
+  CASE WHEN TRY_CAST(regexp_extract(key_algorithm, '^RSA-(\d+)$', 1) AS INTEGER) < 2048 THEN 'RSA under 2048 bits' END,
+  CASE WHEN regexp_matches(x509.main.cert_signature_algorithm(pem), 'SHA1|MD5') THEN 'SHA-1 or MD5 signature' END,
+  CASE WHEN date_diff('day', x509.main.cert_not_before(pem), not_after) > 398 THEN 'lifetime over 398 days' END,
+  CASE WHEN x509.main.cert_issuer(pem) = x509.main.cert_subject(pem) THEN 'self-signed' END
+], lambda f: f IS NOT NULL) AS findings FROM certs ORDER BY not_after;
+----
+legacy	2016-01-01 00:00:00	RSA-1024	[not currently valid, RSA under 2048 bits, SHA-1 or MD5 signature]
+test	2035-01-01 00:00:00	ECDSA-P256	[lifetime over 398 days, self-signed]
+
+# The 30-day renewal window fires for a certificate expiring soon (checked with
+# a shifted clock, since both fixtures are far from now).
+query T
+SELECT name FROM certs
+WHERE x509.cert_not_after(pem) BETWEEN TIMESTAMP '2034-12-15' AND TIMESTAMP '2034-12-15' + INTERVAL 30 DAY;
+----
+test
+
+# Hostname coverage: which certificate's SANs list each host, and is it valid now.
+query TTT
+WITH hosts(host) AS (VALUES ('alt.vgi-x509.example'), ('legacy.vgi-x509.example'), ('www.vgi-x509.example'))
+SELECT r.host, i.name AS covered_by, NOT x509.main.cert_is_expired(i.pem) AS valid_now
+FROM hosts AS r LEFT JOIN certs AS i ON list_contains(x509.main.cert_sans(i.pem), r.host)
+ORDER BY r.host;
+----
+alt.vgi-x509.example	test	true
+legacy.vgi-x509.example	legacy	false
+www.vgi-x509.example	NULL	NULL
+
+# cert_info over both fixtures joined on field: only is_ca agrees.
+query T
+SELECT a.field FROM x509.main.cert_info('-----BEGIN CERTIFICATE-----
+MIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg
+WDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN
+MjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw
+OSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq
+hkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac
+Ot2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B
+Af8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV
+HREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt
+cGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo
+KBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0
+-----END CERTIFICATE-----') AS a
+JOIN x509.main.cert_info('-----BEGIN CERTIFICATE-----
+MIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw
+OSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw
+MTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4
+dHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI
+hvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt
+a9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh
+drwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0
+lr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl
+MAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa
+riO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=
+-----END CERTIFICATE-----') AS b ON a.field = b.field
+WHERE a.value = b.value ORDER BY a.field;
+----
+is_ca
 
 # ---- malformed certificate surfaces a clean error (not a crash) ----
 

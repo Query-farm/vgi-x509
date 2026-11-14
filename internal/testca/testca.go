@@ -40,9 +40,9 @@ type Generated struct {
 	TLSCert tls.Certificate
 }
 
-// Default returns a CertSpec for a typical valid leaf certificate: CN=example
-// test, SANs example.com / *.example.com / 127.0.0.1, valid from one hour ago
-// to one year out.
+// Default returns a CertSpec for a typical valid leaf certificate:
+// CN=example.test, SANs example.test / www.example.test / 127.0.0.1, valid from
+// one hour ago to one year out.
 func Default() CertSpec {
 	now := time.Now()
 	return CertSpec{

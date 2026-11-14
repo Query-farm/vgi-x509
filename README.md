@@ -23,15 +23,17 @@ INSTALL vgi FROM community; LOAD vgi;
 
 ATTACH 'x509' AS x509 (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-x509@v0.4.0');
 
--- Parse a certificate (PEM text or DER bytes work everywhere):
+-- my_certs is your own table with a pem column (PEM text or DER bytes).
+-- Parse a certificate:
 SELECT x509.cert_subject(pem), x509.cert_not_after(pem), x509.cert_is_expired(pem)
 FROM my_certs;
 
 -- Subject alternative names as a list:
 SELECT x509.cert_sans(pem) FROM my_certs;
 
--- Long-format dump of one certificate:
-SELECT field, value FROM x509.cert_info('-----BEGIN CERTIFICATE-----...');
+-- Long-format dump of one certificate (a table function takes a constant, so
+-- paste the whole PEM text in place of <PEM>):
+SELECT field, value FROM x509.cert_info('<PEM>');
 
 -- Inspect a live TLS endpoint (AUTHORIZED endpoints only — see below):
 SELECT seq, subject, not_after, fingerprint
@@ -117,8 +119,8 @@ yields a `NULL` result (scalars) or zero rows (`cert_info`).
 | `cert_not_before(cert)` | `TIMESTAMP` | Start of the validity window (UTC) |
 | `cert_not_after(cert)` | `TIMESTAMP` | End of the validity window (UTC) |
 | `cert_is_expired(cert)` | `BOOLEAN` | Whether the cert is outside its validity window *now* |
-| `cert_key_algorithm(cert)` | `VARCHAR` | Public-key algorithm + size/curve, e.g. `RSA-2048`, `ECDSA-P256`, `Ed25519` |
-| `cert_signature_algorithm(cert)` | `VARCHAR` | Signature algorithm, e.g. `ECDSA-SHA256` |
+| `cert_key_algorithm(cert)` | `VARCHAR` | Public-key algorithm + size/curve, e.g. `RSA-2048`, `ECDSA-P256`, `Ed25519`, `X25519`; `Unknown` for an unrecognised algorithm |
+| `cert_signature_algorithm(cert)` | `VARCHAR` | Signature algorithm, e.g. `ECDSA-SHA256`, `SHA256-RSA`; `Unknown` for an unrecognised OID |
 | `cert_fingerprint(cert)` | `VARCHAR` | SHA-256 fingerprint of the DER (lowercase hex) |
 | `cert_is_ca(cert)` | `BOOLEAN` | Whether the cert is a CA (BasicConstraints) |
 | `cert_sans(cert)` | `VARCHAR[]` | Subject alternative names: DNS names then IP addresses |
@@ -129,7 +131,7 @@ yields a `NULL` result (scalars) or zero rows (`cert_info`).
 attribute above for one certificate, one row per field.
 
 ```sql
-SELECT field, value FROM x509.cert_info('-----BEGIN CERTIFICATE-----...');
+SELECT field, value FROM x509.cert_info('<PEM>');  -- <PEM>: the full PEM text
 ```
 
 `tls_inspect(host_port) -> (seq INT, subject, issuer, not_before TIMESTAMP, not_after TIMESTAMP, is_ca BOOLEAN, fingerprint)`
@@ -156,6 +158,64 @@ error; the function never hangs. A `NULL` `host_port` yields zero rows.
 > default (`insecure := true`), because the purpose is to inspect whatever a
 > server presents — including expired or self-signed certificates.
 
+### Combining functions
+
+The scalars compose over a column of certificates, so one query can audit a
+whole inventory. Given a table `my_certs(name, pem)` (PEM text or DER bytes),
+this lists every certificate by expiry with its policy findings:
+
+```sql
+SELECT name,
+       x509.main.cert_not_after(pem) AS not_after,
+       x509.main.cert_key_algorithm(pem) AS key_algorithm,
+       list_filter([
+         CASE WHEN x509.main.cert_is_expired(pem) THEN 'not currently valid' END,
+         CASE WHEN timezone('UTC', not_after) BETWEEN now() AND now() + INTERVAL 30 DAY
+              THEN 'expires within 30 days' END,
+         CASE WHEN TRY_CAST(regexp_extract(key_algorithm, '^RSA-(\d+)$', 1) AS INTEGER) < 2048
+              THEN 'RSA under 2048 bits' END,
+         CASE WHEN regexp_matches(x509.main.cert_signature_algorithm(pem), 'SHA1|MD5')
+              THEN 'SHA-1 or MD5 signature' END,
+         CASE WHEN date_diff('day', x509.main.cert_not_before(pem), not_after) > 398
+              THEN 'lifetime over 398 days' END,
+         CASE WHEN x509.main.cert_issuer(pem) = x509.main.cert_subject(pem)
+              THEN 'self-signed' END
+       ], lambda f: f IS NOT NULL) AS findings
+FROM my_certs
+ORDER BY not_after;
+```
+
+398 days is the CA/Browser Forum maximum lifetime for a TLS server
+certificate. `cert_not_after` returns a UTC `TIMESTAMP`, so `timezone('UTC', …)`
+compares it with `now()` correctly in any session time zone.
+
+To see which certificate serves each hostname you need, and whether it is still
+valid:
+
+```sql
+WITH hosts(host) AS (VALUES ('www.example.com'), ('api.example.com'))
+SELECT h.host, c.name AS covered_by, NOT x509.main.cert_is_expired(c.pem) AS valid_now
+FROM hosts AS h
+LEFT JOIN my_certs AS c ON list_contains(x509.main.cert_sans(c.pem), h.host)
+ORDER BY h.host;
+```
+
+To find out which of your certificates a server is actually presenting, join
+the live chain from `tls_inspect` to the inventory on the SHA-256 fingerprint
+(a NULL `inventory_name` is a certificate you do not have on file):
+
+```sql
+SELECT t.seq, t.subject, t.not_after, c.name AS inventory_name
+FROM x509.main.tls_inspect('example.com:443') AS t
+LEFT JOIN my_certs AS c ON x509.main.cert_fingerprint(c.pem) = t.fingerprint
+ORDER BY t.seq;
+```
+
+Runnable versions of these queries, over the worker's two committed sample
+certificates, are in the schema's `vgi.example_queries` and on the examples of
+`cert_not_after`, `cert_key_algorithm`, `cert_signature_algorithm`,
+`cert_sans`, `cert_is_expired` and `tls_inspect`.
+
 ## Build & test
 
 ```sh
@@ -174,10 +234,21 @@ export PATH="$HOME/.local/bin:$PATH"
 ```
 
 The cert-parsing scalars and `cert_info` are pure (no network) and are tested in
-SQL against a committed PEM fixture. `tls_inspect` is tested against a tiny mock
-TLS server (`cmd/mockserver`) that presents a generated self-signed certificate;
-the `Makefile`'s `test-sql` target starts it on a free port, points the test at
-it via `VGI_X509_TEST_ADDR`, and stops it afterward.
+SQL against two committed PEM fixtures. `tls_inspect` is tested against a tiny mock
+TLS server (`cmd/mockserver`) that presents a generated self-signed certificate.
+`make test-sql` runs `ci/run-integration.sh`, the same script CI uses: it starts
+the mock server on a free port, points the tests at it via `VGI_X509_TEST_ADDR`
+(and at its certificate via `VGI_X509_TEST_CERT_FILE`), and stops it afterward.
+`make test-sql TRANSPORT=http` (or `unix`) runs the suite over another worker
+transport.
+
+The metadata gate is `vgi-lint`, configured by `vgi-lint.toml`:
+
+```sh
+make build
+uvx --prerelease allow --from 'vgi-lint-check>=2.5.1' vgi-lint lint \
+    --execute --execute-mode run --fail-on info
+```
 
 ## Licensing
 

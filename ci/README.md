@@ -23,7 +23,8 @@ extension from the Haybarn community channel:
    `LOAD vgi;` (haybarn silently *skips* `require vgi`), so the awk is mostly a
    pass-through here; `require-env` and everything else pass through untouched.
 4. **Run** — [`run-integration.sh`](run-integration.sh) builds + starts the
-   repo's `mockserver` on a free port (exporting `VGI_X509_TEST_ADDR`), stages
+   repo's `mockserver` on a free port (exporting `VGI_X509_TEST_ADDR`, and
+   `VGI_X509_TEST_CERT_FILE` for the certificate it presents), stages
    the preprocessed tree, points `VGI_X509_WORKER` at the built worker binary,
    warms the extension cache once (`INSTALL vgi FROM community`), then runs the
    suite in a single `haybarn-unittest` invocation. Any failed assertion exits
@@ -40,6 +41,6 @@ VGI_X509_WORKER="$PWD/vgi-x509-worker" \
   ci/run-integration.sh
 ```
 
-Or use the Makefile target (`make test-sql`), which builds both binaries,
-starts the mock server, and points the worker at `$(CURDIR)/vgi-x509-worker`
-with `haybarn-unittest` on `PATH`.
+Or use the Makefile target (`make test-sql`, optionally `TRANSPORT=http|unix`),
+which builds the worker and runs this script with the `haybarn-unittest` (2.0)
+on `PATH`.

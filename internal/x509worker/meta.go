@@ -88,6 +88,26 @@ const fixturePEM = "-----BEGIN CERTIFICATE-----\n" +
 	"KBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n" +
 	"-----END CERTIFICATE-----"
 
+// legacyPEM is a second committed fixture, so composed examples and agent tasks
+// can audit an inventory of more than one certificate. It is deliberately the
+// opposite of fixturePEM on every policy axis: CN=legacy.vgi-x509.example,
+// serial 1001, valid 2015-01-01 .. 2016-01-01 (expired, 365-day lifetime), an
+// RSA-1024 key (weak), signed with ECDSA-SHA1 (deprecated) by a separate
+// "VGI X509 Fixture CA" (so not self-signed), SAN legacy.vgi-x509.example. The
+// CA's key was thrown away; nothing here verifies the signature.
+const legacyPEM = "-----BEGIN CERTIFICATE-----\n" +
+	"MIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\n" +
+	"OSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\n" +
+	"MTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\n" +
+	"dHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\n" +
+	"hvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\n" +
+	"a9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\n" +
+	"drwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\n" +
+	"lr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\n" +
+	"MAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\n" +
+	"riO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\n" +
+	"-----END CERTIFICATE-----"
+
 // executableExample is one guaranteed-runnable example (VGI509). expected_result
 // is intentionally omitted — the linter only needs each query to execute cleanly.
 type executableExample struct {
@@ -111,12 +131,16 @@ func scalarExecExampleJSON(fn, desc string) string {
 // VGI515): a JSON array of {description, sql} objects — every example carries a
 // human-readable description (the plain-string form the native carrier keeps
 // drops descriptions). It uses only OFFLINE functions over the committed fixture
-// PEM so every statement executes as written when the worker is attached
-// (tls_inspect needs a live network endpoint and is excluded). Each example
-// embeds the ~800-character fixture, so the list stays at four to keep the tag
-// under the 4,000-character agent context limit (VGI417); every function also
-// carries its own examples.
-var SchemaExampleQueries = mustJSON([]executableExample{
+// PEMs so every statement executes as written when the worker is attached
+// (tls_inspect needs a live network endpoint, so its composed example lives only
+// on tls_inspect). Each example embeds at least one ~800-character fixture, so
+// the list is sized against the 8,000-character limit vgi-lint applies to
+// example lists (VGI417); TestExampleListsWithinAgentLimit guards it.
+//
+// The composed examples (several of the worker's objects in one query) also sit
+// on the function that drives each query, because the vgi-lint agent simulator
+// only shows agents per-object examples (describe_function), never this list.
+var SchemaExampleQueries = exampleQueriesJSON([]vgi.CatalogExample{
 	{
 		Description: "Read the subject distinguished name of a certificate.",
 		SQL:         "SELECT x509.main.cert_subject('" + fixturePEM + "') AS subject",
@@ -133,7 +157,66 @@ var SchemaExampleQueries = mustJSON([]executableExample{
 		Description: "Dump every certificate attribute as (field, value) rows, ordered by field.",
 		SQL:         "SELECT field, value FROM x509.main.cert_info('" + fixturePEM + "') ORDER BY field",
 	},
+	ComposedPolicyAuditExample,
+	ComposedHostCoverageExample,
 })
+
+// Composed examples: each one combines several of this worker's objects in one
+// query, which is how the functions are used in practice (a certificate review
+// rarely asks for a single field). Each SQL is defined once here and referenced
+// from the schema list and from the driving object's example list.
+
+// inventoryCTE defines certs(name, pem), a two-certificate inventory over both
+// committed fixtures: the stand-in for a real table of PEM or DER certificates.
+const inventoryCTE = "WITH certs(name, pem) AS (VALUES ('test', '" + fixturePEM + "'), " +
+	"('legacy', '" + legacyPEM + "'))"
+
+// ComposedPolicyAuditExample is a certificate compliance report: one row per
+// certificate with its policy findings (outside the validity window, expiring
+// within 30 days, RSA under 2048 bits, SHA-1/MD5 signature, lifetime over the
+// CA/Browser Forum 398-day limit, self-signed). Driven by cert_not_after,
+// cert_key_algorithm and cert_signature_algorithm.
+var ComposedPolicyAuditExample = vgi.CatalogExample{
+	Description: "Compliance audit of a certificate inventory: expiry, key algorithm and policy findings " +
+		"per certificate. The legacy sample is expired, RSA-1024 and SHA-1 signed; the test sample is self-signed " +
+		"with a 10-year lifetime.",
+	SQL: inventoryCTE + " SELECT name, x509.main.cert_not_after(pem) AS not_after, " +
+		"x509.main.cert_key_algorithm(pem) AS key_algorithm, list_filter([" +
+		"CASE WHEN x509.main.cert_is_expired(pem) THEN 'not currently valid' END, " +
+		"CASE WHEN timezone('UTC', not_after) BETWEEN now() AND now() + INTERVAL 30 DAY THEN 'expires within 30 days' END, " +
+		"CASE WHEN TRY_CAST(regexp_extract(key_algorithm, '^RSA-(\\d+)$', 1) AS INTEGER) < 2048 THEN 'RSA under 2048 bits' END, " +
+		"CASE WHEN regexp_matches(x509.main.cert_signature_algorithm(pem), 'SHA1|MD5') THEN 'SHA-1 or MD5 signature' END, " +
+		"CASE WHEN date_diff('day', x509.main.cert_not_before(pem), not_after) > 398 THEN 'lifetime over 398 days' END, " +
+		"CASE WHEN x509.main.cert_issuer(pem) = x509.main.cert_subject(pem) THEN 'self-signed' END" +
+		"], lambda f: f IS NOT NULL) AS findings FROM certs ORDER BY not_after",
+}
+
+// ComposedHostCoverageExample answers the deploy-time question "which of my
+// certificates serves each required hostname, and is it valid right now?".
+// Driven by cert_sans (with cert_is_expired).
+var ComposedHostCoverageExample = vgi.CatalogExample{
+	Description: "Hostname coverage: for each required hostname, the inventory certificate whose SANs list it and " +
+		"whether it is valid now. Here alt is covered by a valid certificate, legacy only by an expired one, " +
+		"www by none (NULL).",
+	SQL: inventoryCTE + ", hosts(host) AS (VALUES ('alt.vgi-x509.example'), ('legacy.vgi-x509.example'), " +
+		"('www.vgi-x509.example')) " +
+		"SELECT r.host, i.name AS covered_by, NOT x509.main.cert_is_expired(i.pem) AS valid_now " +
+		"FROM hosts AS r LEFT JOIN certs AS i ON list_contains(x509.main.cert_sans(i.pem), r.host) " +
+		"ORDER BY r.host",
+}
+
+// ComposedLiveInventoryExample maps the chain a live server presents onto a
+// certificate inventory by SHA-256 fingerprint (tls_inspect + cert_fingerprint):
+// the useful form of certificate pinning, since it says WHICH inventory
+// certificate is deployed. Live network, so it sits only on tls_inspect.
+var ComposedLiveInventoryExample = vgi.CatalogExample{
+	Description: "Which inventory certificate a server is serving (AUTHORIZED endpoints only): join each certificate " +
+		"in the presented chain (tls_inspect) to an inventory on cert_fingerprint. inventory_name is NULL for a " +
+		"certificate that is not in the inventory, which is every row for example.com against the two samples.",
+	SQL: inventoryCTE + " SELECT t.seq, t.subject, t.not_after, i.name AS inventory_name " +
+		"FROM x509.main.tls_inspect('example.com:443') AS t " +
+		"LEFT JOIN certs AS i ON x509.main.cert_fingerprint(i.pem) = t.fingerprint ORDER BY t.seq",
+}
 
 // exampleQueriesJSON encodes a function's CatalogExample list as the
 // vgi.example_queries tag payload (VGI515): a JSON array of {description, sql}
@@ -184,102 +267,134 @@ var CategoriesJSON = mustJSON([]category{
 // agentTestTask is one analyst task for `vgi-lint simulate` (VGI152 / VGI920): a
 // natural-language prompt. Only name + prompt are published (VGI416); each task's
 // grader-only oracle lives in the private repo-root sidecar vgi-agent-tests.yaml,
-// keyed by task name, which vgi-lint discovers on its own. Deterministic, offline
-// tasks use reference_sql (exact result compare, with ignore_column_names). Live
-// tasks (tls_inspect, whose output is a real server certificate that rotates)
-// instead use check_sql — a post-session boolean assertion of a STABLE fact — so
-// grading cannot flake on cert rotation. Keep the sidecar in sync when a task
-// changes.
+// keyed by task name, which vgi-lint discovers on its own. Offline tasks use
+// reference_sql (exact result compare, with ignore_column_names), so every such
+// prompt pins the shape of the answer: row count, column count and type. The one
+// live task (tls_inspect, whose certificate rotates) has the analyst record its
+// answer in a temp table and grades it with check_sql against a fresh
+// tls_inspect call, so a wrong answer fails. Keep the sidecar in sync when a task
+// changes; TestAgentTasksMatchSidecar guards the names.
 type agentTestTask struct {
 	Name   string `json:"name"`
 	Prompt string `json:"prompt"`
 }
 
+// twoCertPrompt appends both committed fixtures, labelled A and B.
+func twoCertPrompt(question string) string {
+	return question + "\nCertificate A:\n" + fixturePEM + "\nCertificate B:\n" + legacyPEM
+}
+
 // AgentTestTasksJSON is the catalog-level vgi.agent_test_tasks payload (VGI152):
-// a JSON array of {name, prompt} tasks that `vgi-lint simulate`
-// uses to measure how well an agent actually drives this worker. Every task is
-// OFFLINE — each prompt embeds the committed fixture certificate so the agent can
-// answer with the offline cert-parsing functions, with no live TLS endpoint
-// needed to run the reference SQL. Exported so the catalog tags in cmd/ can
-// attach it.
+// a JSON array of {name, prompt} tasks that `vgi-lint simulate` uses to measure
+// how well an agent actually drives this worker. All but one are offline: each
+// prompt embeds a committed fixture certificate. Exported so the catalog tags in
+// cmd/ can attach it.
 var AgentTestTasksJSON = mustJSON([]agentTestTask{
 	{
-		Name:   "certificate serial number",
-		Prompt: "Return the serial number of this X.509 certificate as a single value, exactly as the worker reports it:\n" + fixturePEM,
+		Name: "certificate serial number",
+		Prompt: "What is the serial number of this X.509 certificate? Return one row with one VARCHAR column: " +
+			"the serial number as a decimal string, exactly as the worker reports it.\n" + fixturePEM,
 	},
 	{
-		// Reframed as a yes/no predicate over the worker's own output so grading
-		// cannot flake on how the analyst spells or aliases the algorithm string
-		// (e.g. "ECDSA" vs "ECDSA-P256" vs a renamed column). The fixture key is
-		// ECDSA on NIST P-256, so cert_key_algorithm returns exactly 'ECDSA-P256'.
+		// A yes/no predicate over the worker's own output, so grading cannot flake
+		// on how the analyst spells the algorithm. cert_key_algorithm returns
+		// exactly 'ECDSA-P256' for the fixture.
 		Name:   "public-key algorithm is ECDSA P-256",
-		Prompt: "Does this certificate use an ECDSA key on the NIST P-256 curve? Return a single boolean.\n" + fixturePEM,
+		Prompt: "Does this certificate use an ECDSA key on the NIST P-256 curve? Return one row with one BOOLEAN column.\n" + fixturePEM,
 	},
 	{
-		Name:   "signature algorithm",
-		Prompt: "What algorithm was used to sign this certificate? Return the single value the worker reports:\n" + fixturePEM,
+		Name: "signature algorithm",
+		Prompt: "What algorithm was used to sign this certificate? Return one row with one VARCHAR column: the " +
+			"algorithm name exactly as the worker reports it.\n" + fixturePEM,
 	},
 	{
-		Name:   "certificate fingerprint",
-		Prompt: "Compute the SHA-256 fingerprint of this certificate as lowercase hex:\n" + fixturePEM,
+		Name: "certificate fingerprint",
+		Prompt: "Compute the SHA-256 fingerprint of this certificate. Return one row with one VARCHAR column: " +
+			"the fingerprint as lowercase hex with no separators.\n" + fixturePEM,
 	},
 	{
 		Name:   "is a CA certificate",
-		Prompt: "Is this certificate a certificate-authority (CA) certificate? Return a boolean:\n" + fixturePEM,
+		Prompt: "Is this certificate a certificate-authority (CA) certificate? Return one row with one BOOLEAN column.\n" + fixturePEM,
 	},
 	{
-		Name:   "certificate expiry check",
-		Prompt: "Is this certificate currently expired (outside its validity window)? Return a boolean:\n" + fixturePEM,
+		// The legacy fixture expired in 2016, so the answer is true: an agent
+		// that guesses "not expired" fails.
+		Name: "certificate expiry check",
+		Prompt: "Is this certificate currently expired (outside its validity window)? Return one row with one " +
+			"BOOLEAN column.\n" + legacyPEM,
 	},
 	{
-		Name:   "certificate expiry timestamp",
-		Prompt: "When does this certificate expire? Return the end of its validity window as a timestamp:\n" + fixturePEM,
+		Name: "certificate expiry timestamp",
+		Prompt: "When does this certificate expire? Return one row with one TIMESTAMP column (UTC): the end of " +
+			"its validity window (notAfter).\n" + fixturePEM,
 	},
 	{
-		Name:   "certificate valid-from timestamp",
-		Prompt: "When does this certificate become valid? Return the start of its validity window (notBefore) as a single timestamp:\n" + fixturePEM,
+		Name: "certificate valid-from timestamp",
+		Prompt: "When does this certificate become valid? Return one row with one TIMESTAMP column (UTC): the " +
+			"start of its validity window (notBefore).\n" + fixturePEM,
 	},
 	{
-		Name: "boolean-valued certificate fields",
-		Prompt: "This worker exposes a browsable registry of every certificate attribute it can read and the scalar function that returns each one. " +
-			"Using that registry, list the fields whose result type is BOOLEAN together with the scalar function that returns them, ordered by field name.",
+		Name: "scalar functions returning text",
+		Prompt: "This worker exposes a browsable registry of every certificate attribute it can read, the scalar " +
+			"function that returns each one, and that function's result type. Using that registry, list the " +
+			"scalar functions whose result type is VARCHAR. Return one VARCHAR column with the function names, " +
+			"one row per function, ordered by name.",
 	},
 	{
-		// tls_inspect connects to a LIVE endpoint whose certificate rotates, so an
-		// exact reference compare would be a latent flake. Grade instead via a
-		// check_sql assertion of a stable fact: the leaf certificate (seq 0) a TLS
-		// server presents is never itself a CA certificate. example.com is an
-		// IANA-operated, long-stable endpoint used only for this defensive probe.
-		Name: "live TLS endpoint leaf certificate",
+		// Graded by check_sql (see vgi-agent-tests.yaml): it re-inspects the live
+		// endpoint and compares with the analyst's temp table, so the grade
+		// tracks certificate rotation and still fails a wrong answer.
+		// example.com is an IANA-operated, long-stable endpoint used only for
+		// this defensive probe.
+		Name: "live TLS endpoint chain",
 		Prompt: "Connect to the live TLS endpoint example.com:443 and inspect the certificate chain it presents. " +
-			"Is the leaf certificate — the one at sequence 0 — itself a certificate-authority (CA) certificate? Return a single boolean.",
+			"Record your answer in a temporary table named answer with exactly one row and two columns: " +
+			"chain_length INTEGER (how many certificates the server presented) and leaf_is_ca BOOLEAN (whether " +
+			"the leaf certificate, sequence 0, is itself a certificate-authority certificate).",
 	},
 	{
-		// Reframed as a yes/no predicate over the worker's own cert_subject output:
-		// asking the analyst to reproduce a distinguished-name string verbatim is a
-		// latent flake because an agent reorders or reformats the RDN components. The
-		// fixture subject is CN=test.vgi-x509.example,O=VGI X509 Fixture, so its
-		// distinguished name contains the host name test.vgi-x509.example.
-		Name:   "certificate subject names the expected host",
-		Prompt: "Does the subject of this certificate name the host test.vgi-x509.example (i.e. its subject distinguished name contains that name)? Return a single boolean.\n" + fixturePEM,
+		// A predicate rather than the DN string: an agent may reorder or reformat
+		// RDN components. The fixture subject is
+		// CN=test.vgi-x509.example,O=VGI X509 Fixture.
+		Name: "certificate subject names the expected host",
+		Prompt: "Does the subject distinguished name of this certificate contain the host name test.vgi-x509.example? " +
+			"Return one row with one BOOLEAN column.\n" + fixturePEM,
 	},
 	{
-		// Reframed as a boolean self-issued check for the same reason as the subject
-		// task. The fixture is self-signed, so its issuer distinguished name equals
-		// its subject distinguished name.
-		Name:   "certificate is self-issued",
-		Prompt: "Is this certificate self-issued — that is, does its issuer distinguished name equal its subject distinguished name? Return a single boolean.\n" + fixturePEM,
+		// The fixture is self-signed, so its issuer DN equals its subject DN.
+		Name: "certificate is self-issued",
+		Prompt: "Is this certificate self-issued, that is, does its issuer distinguished name equal its subject " +
+			"distinguished name? Return one row with one BOOLEAN column.\n" + fixturePEM,
 	},
 	{
-		// Reframed as a set-membership predicate: returning a whole list value verbatim
-		// is a latent flake (the analyst may unnest it to rows or reorder it). The
-		// fixture's subject alternative names include the DNS name alt.vgi-x509.example.
-		Name:   "subject alternative names include alt host",
-		Prompt: "Is alt.vgi-x509.example one of this certificate's subject alternative names (SANs)? Return a single boolean.\n" + fixturePEM,
+		// Set membership rather than the whole list, which an agent may unnest.
+		Name: "subject alternative names include alt host",
+		Prompt: "Is alt.vgi-x509.example one of this certificate's subject alternative names (SANs)? Return one " +
+			"row with one BOOLEAN column.\n" + fixturePEM,
 	},
 	{
-		Name:   "dump all certificate fields",
-		Prompt: "Dump every attribute of this certificate as (field, value) rows, ordered by field:\n" + fixturePEM,
+		// Composed: cert_info over two certificates, joined on field. The only
+		// attribute the two fixtures share is is_ca (false).
+		Name: "attributes shared by two certificates",
+		Prompt: twoCertPrompt("Compare these two certificates attribute by attribute using the worker's " +
+			"long-format certificate dump. Which attributes have the same value in both? Return one VARCHAR " +
+			"column with the attribute names exactly as the dump names them, one row per attribute, ordered by name."),
+	},
+	{
+		// Composed: cert_not_before + cert_not_after + cert_fingerprint. Only
+		// certificate A (10-year lifetime) exceeds 398 days.
+		Name: "certificate lifetime over 398 days",
+		Prompt: twoCertPrompt("Which of these two certificates has a validity period (notBefore to notAfter) " +
+			"longer than 398 days, the CA/Browser Forum maximum for TLS server certificates? Return one row with " +
+			"one VARCHAR column: that certificate's SHA-256 fingerprint as lowercase hex."),
+	},
+	{
+		// Composed: cert_key_algorithm + cert_signature_algorithm + cert_serial.
+		// Only certificate B (RSA-1024, ECDSA-SHA1) is weak; its serial is 1001.
+		Name: "certificate with weak cryptography",
+		Prompt: twoCertPrompt("Which of these two certificates has weak cryptography: an RSA key shorter than " +
+			"2048 bits, or a SHA-1 or MD5 signature? Return one row with one VARCHAR column: its serial number " +
+			"as a decimal string, exactly as the worker reports it."),
 	},
 })
 

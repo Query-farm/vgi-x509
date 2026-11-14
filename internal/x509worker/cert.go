@@ -8,6 +8,8 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
@@ -79,8 +81,13 @@ func IsExpired(c *x509.Certificate, now time.Time) bool {
 // IsCA reports whether the certificate is a CA certificate (BasicConstraints).
 func IsCA(c *x509.Certificate) bool { return c.IsCA }
 
+// UnknownAlgorithm is what KeyAlgorithm and SignatureAlgorithm return for an
+// algorithm Go's crypto/x509 does not recognise. Without it Go's String()
+// methods render the zero enum value as the bare string "0".
+const UnknownAlgorithm = "Unknown"
+
 // KeyAlgorithm returns a human-readable public-key algorithm with key size or
-// curve, e.g. "RSA-2048", "ECDSA-P256", "Ed25519".
+// curve, e.g. "RSA-2048", "ECDSA-P256", "Ed25519", "X25519", or UnknownAlgorithm.
 func KeyAlgorithm(c *x509.Certificate) string {
 	switch pub := c.PublicKey.(type) {
 	case *rsa.PublicKey:
@@ -90,14 +97,40 @@ func KeyAlgorithm(c *x509.Certificate) string {
 		return "ECDSA-" + strings.ReplaceAll(name, "-", "")
 	case ed25519.PublicKey:
 		return "Ed25519"
-	default:
-		return c.PublicKeyAlgorithm.String()
 	}
+	if c.PublicKeyAlgorithm == x509.UnknownPublicKeyAlgorithm {
+		// crypto/x509 leaves PublicKey nil for algorithms it does not model,
+		// including the RFC 8410 curves other than Ed25519, so name those from
+		// the SubjectPublicKeyInfo OID.
+		var spki struct {
+			Algorithm pkix.AlgorithmIdentifier
+			PublicKey asn1.BitString
+		}
+		if _, err := asn1.Unmarshal(c.RawSubjectPublicKeyInfo, &spki); err == nil {
+			for oid, name := range rfc8410Keys {
+				if spki.Algorithm.Algorithm.String() == oid {
+					return name
+				}
+			}
+		}
+		return UnknownAlgorithm
+	}
+	return c.PublicKeyAlgorithm.String()
+}
+
+// rfc8410Keys names the RFC 8410 key OIDs that crypto/x509 reports as unknown.
+var rfc8410Keys = map[string]string{
+	"1.3.101.110": "X25519",
+	"1.3.101.111": "X448",
+	"1.3.101.113": "Ed448",
 }
 
 // SignatureAlgorithm returns the certificate signature algorithm name, e.g.
-// "SHA256-RSA", "ECDSA-SHA256".
+// "SHA256-RSA", "ECDSA-SHA256", or UnknownAlgorithm for an unrecognised OID.
 func SignatureAlgorithm(c *x509.Certificate) string {
+	if c.SignatureAlgorithm == x509.UnknownSignatureAlgorithm {
+		return UnknownAlgorithm
+	}
 	return c.SignatureAlgorithm.String()
 }
 

@@ -111,13 +111,12 @@ func TestScalarAccessors(t *testing.T) {
 	}
 }
 
-func TestKeyAlgorithmRSA(t *testing.T) {
-	// The default generator is ECDSA; cover the RSA branch via a known cert.
-	// We reuse the ECDSA cert but assert the ECDSA path here; RSA is exercised
-	// by the human-readable format string. (Kept minimal: ECDSA is generated.)
+func TestKeyAlgorithmECDSA(t *testing.T) {
+	// The default generator is ECDSA P-256. The RSA, X25519 and unknown branches
+	// are covered in algorithm_test.go.
 	g := mustGen(t, nil)
-	if got := KeyAlgorithm(g.Cert); !strings.HasPrefix(got, "ECDSA-") {
-		t.Errorf("KeyAlgorithm = %q, want ECDSA- prefix", got)
+	if got := KeyAlgorithm(g.Cert); got != "ECDSA-P256" {
+		t.Errorf("KeyAlgorithm = %q, want ECDSA-P256", got)
 	}
 }
 

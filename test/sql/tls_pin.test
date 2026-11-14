@@ -1,0 +1,37 @@
+# name: test/sql/tls_pin.test
+# description: tls_inspect + cert_fingerprint agree on the mock server's own certificate (positive pin / inventory match)
+# group: [vgi_x509]
+
+require-env VGI_X509_WORKER
+
+require-env VGI_X509_TEST_ADDR
+
+# Written by `mockserver --cert-out` (ci/run-integration.sh sets it).
+require-env VGI_X509_TEST_CERT_FILE
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'x509' AS x509 (TYPE vgi, LOCATION '{VGI_X509_WORKER}');
+
+# An inventory holding the certificate the server presents. read_text gives it
+# as PEM text, exactly as an inventory table would.
+statement ok
+CREATE TABLE certs AS SELECT 'mock' AS name, content AS pem FROM read_text('{VGI_X509_TEST_CERT_FILE}');
+
+# Both functions render the fingerprint the same way (lowercase hex, no
+# separators), so the live leaf matches its inventory row.
+query TTT
+SELECT t.seq, t.subject, i.name AS inventory_name
+FROM x509.main.tls_inspect('{VGI_X509_TEST_ADDR}', insecure := true) AS t
+LEFT JOIN certs AS i ON x509.main.cert_fingerprint(i.pem) = t.fingerprint ORDER BY t.seq;
+----
+0	CN=mock.tls.local,O=VGI X509 Test	mock
+
+# Pinning: the fingerprint of the expected certificate equals the live one.
+query T
+SELECT t.fingerprint = x509.main.cert_fingerprint(c.pem)
+FROM x509.main.tls_inspect('{VGI_X509_TEST_ADDR}', insecure := true) AS t, certs AS c WHERE t.seq = 0;
+----
+true

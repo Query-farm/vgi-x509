@@ -10,53 +10,86 @@ statement ok
 LOAD vgi;
 
 statement ok
-ATTACH 'x509' AS x509 (TYPE vgi, LOCATION '${VGI_X509_WORKER}');
+ATTACH 'x509' AS x509 (TYPE vgi, LOCATION '{VGI_X509_WORKER}');
 
 # The mock TLS server presents a single self-signed cert with CN=mock.tls.local.
 # insecure := true so we inspect (not trust) the self-signed chain.
 
 # Exactly one cert in the presented chain.
 query I
-SELECT count(*) FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true);
+SELECT count(*) FROM x509.tls_inspect('{VGI_X509_TEST_ADDR}', insecure := true);
 ----
 1
 
 # The presented leaf has the expected subject.
 query T
-SELECT subject FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
+SELECT subject FROM x509.tls_inspect('{VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
 ----
 CN=mock.tls.local,O=VGI X509 Test
 
 # Self-signed: issuer equals subject.
 query T
-SELECT issuer FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
+SELECT issuer FROM x509.tls_inspect('{VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
 ----
 CN=mock.tls.local,O=VGI X509 Test
 
 # Fingerprint is a 64-char lowercase hex SHA-256.
 query T
 SELECT regexp_full_match(fingerprint, '^[0-9a-f]{64}$')
-FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
+FROM x509.tls_inspect('{VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
 ----
 true
 
 # Leaf is not a CA.
 query T
-SELECT is_ca FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
+SELECT is_ca FROM x509.tls_inspect('{VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
 ----
 false
 
 # Validity columns are real TIMESTAMPs and ordered.
 query T
 SELECT not_before < not_after
-FROM x509.tls_inspect('${VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
+FROM x509.tls_inspect('{VGI_X509_TEST_ADDR}', insecure := true) WHERE seq = 0;
 ----
 true
+
+# Composed inventory match (ComposedLiveInventoryExample): the mock server's
+# certificate is in neither committed fixture, so inventory_name is NULL.
+# tls_pin.test covers the matching case.
+query TT
+WITH certs(name, pem) AS (VALUES ('test', '-----BEGIN CERTIFICATE-----
+MIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg
+WDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN
+MjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw
+OSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq
+hkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac
+Ot2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B
+Af8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV
+HREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt
+cGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo
+KBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0
+-----END CERTIFICATE-----'), ('legacy', '-----BEGIN CERTIFICATE-----
+MIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw
+OSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw
+MTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4
+dHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI
+hvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt
+a9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh
+drwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0
+lr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl
+MAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa
+riO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=
+-----END CERTIFICATE-----'))
+SELECT t.subject, i.name AS inventory_name
+FROM x509.main.tls_inspect('{VGI_X509_TEST_ADDR}', insecure := true) AS t
+LEFT JOIN certs AS i ON x509.main.cert_fingerprint(i.pem) = t.fingerprint ORDER BY t.seq;
+----
+CN=mock.tls.local,O=VGI X509 Test	NULL
 
 # timeout_ms and server_name options are accepted.
 query I
 SELECT count(*) FROM x509.tls_inspect(
-  '${VGI_X509_TEST_ADDR}',
+  '{VGI_X509_TEST_ADDR}',
   insecure := true,
   timeout_ms := 5000,
   server_name := 'mock.tls.local');

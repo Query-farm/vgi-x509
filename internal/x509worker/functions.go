@@ -294,6 +294,7 @@ var sansExamples = []vgi.CatalogExample{
 		SQL:         "SELECT x509.main.cert_sans('" + fixturePEM + "');",
 		Description: "List the subject alternative names (DNS names and IP addresses) of a PEM certificate.",
 	},
+	ComposedHostCoverageExample,
 }
 
 func (f *certSANsScalar) ArgumentSpecs() []vgi.ArgSpec {
@@ -529,6 +530,7 @@ var tlsInspectExamples = []vgi.CatalogExample{
 			"WHERE seq = 0;",
 		Description: "Inspect the leaf certificate a TLS endpoint presents (AUTHORIZED endpoints only): its subject, issuer, and CA flag.",
 	},
+	ComposedLiveInventoryExample,
 }
 
 func (f *tlsInspectFunc) Name() string { return "tls_inspect" }
@@ -656,106 +658,118 @@ func (f *tlsInspectFunc) Process(_ context.Context, _ *vgi.ProcessParams, state 
 // ===========================================================================
 
 // certExamples builds a single catalog-qualified example query for a scalar that
-// takes one certificate argument. The SQL uses the committed fixturePEM (a real,
-// parseable certificate) so vgi-lint's execution checks (VGI901/902) run the
-// query cleanly against the attached worker, not just bind it.
-func certExamples(fn, desc string) []vgi.CatalogExample {
-	return []vgi.CatalogExample{
+// takes one certificate argument, followed by any composed examples this scalar
+// drives. The SQL uses the committed fixturePEM (a real, parseable certificate)
+// so vgi-lint's execution checks (VGI901/902) run the query cleanly against the
+// attached worker, not just bind it.
+func certExamples(fn, desc string, composed ...vgi.CatalogExample) []vgi.CatalogExample {
+	return append([]vgi.CatalogExample{
 		{
 			SQL:         "SELECT x509.main." + fn + "('" + fixturePEM + "');",
 			Description: desc,
 		},
-	}
+	}, composed...)
 }
 
-// Register registers every x509 function on the worker.
-func Register(w *vgi.Worker) {
-	w.RegisterScalar(&certStringScalar{"cert_subject", "Certificate subject as an RFC 2253 distinguished name",
+// scalarFunctions returns every certificate scalar, in registration order.
+// Register registers them; tests read their metadata.
+func scalarFunctions() []vgi.ScalarFunction {
+	var fns []vgi.ScalarFunction
+	fns = append(fns, &certStringScalar{"cert_subject", "Certificate subject as an RFC 2253 distinguished name",
 		objectTags("Certificate Subject Name",
 			"Return the subject of a certificate as an RFC 2253 distinguished name (e.g. CN=..,O=..). Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
 			"Read the certificate's subject as an RFC 2253 distinguished name.",
 			"subject, distinguished name, dn, common name, cn, cert_subject, x509, certificate"),
 		certExamples("cert_subject", "Read the subject distinguished name of a PEM certificate."), func(h *certHandle) string { return Subject(h.cert) }})
-	w.RegisterScalar(&certStringScalar{"cert_issuer", "Certificate issuer as an RFC 2253 distinguished name",
+	fns = append(fns, &certStringScalar{"cert_issuer", "Certificate issuer as an RFC 2253 distinguished name",
 		objectTags("Certificate Issuer Name",
 			"Return the issuer of a certificate as an RFC 2253 distinguished name (the CA that signed it). Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
 			"Read the certificate's issuer as an RFC 2253 distinguished name.",
 			"issuer, distinguished name, dn, ca, signing authority, cert_issuer, x509, certificate"),
 		certExamples("cert_issuer", "Read the issuer distinguished name of a PEM certificate."), func(h *certHandle) string { return Issuer(h.cert) }})
-	w.RegisterScalar(&certStringScalar{"cert_serial", "Certificate serial number (decimal string)",
+	fns = append(fns, &certStringScalar{"cert_serial", "Certificate serial number (decimal string)",
 		objectTags("Certificate Serial Number",
 			"Return the certificate serial number as a decimal string. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
 			"Read the certificate serial number as a decimal string.",
 			"serial, serial number, cert_serial, identifier, x509, certificate"),
 		certExamples("cert_serial", "Read the serial number of a PEM certificate as a decimal string."), func(h *certHandle) string { return Serial(h.cert) }})
-	w.RegisterScalar(&certStringScalar{"cert_key_algorithm", "Public-key algorithm with size/curve (e.g. RSA-2048, ECDSA-P256, Ed25519)",
+	fns = append(fns, &certStringScalar{"cert_key_algorithm", "Public-key algorithm with size/curve (e.g. RSA-2048, ECDSA-P256, Ed25519)",
 		objectTags("Certificate Public-Key Algorithm",
 			"Return the certificate's subject public-key algorithm together with its key size or curve, as a "+
 				"`VARCHAR` built by this worker (not Go's bare algorithm name). The value follows a fixed "+
 				"convention: RSA keys render as `RSA-<bits>` where <bits> is the modulus size, typically "+
 				"`RSA-2048`, `RSA-3072` or `RSA-4096`; ECDSA keys render as `ECDSA-<curve>` with the curve "+
 				"name stripped of its hyphen, i.e. `ECDSA-P256`, `ECDSA-P384`, `ECDSA-P521`; Edwards keys "+
-				"render as the single token `Ed25519`. Any other key type falls back to Go's public-key "+
-				"algorithm name (e.g. `DSA`). For a security audit, RSA moduli below 2048 bits are considered "+
+				"render as the single token `Ed25519`, and X25519, X448 and Ed448 keys as `X25519`, `X448`, `Ed448`. Any other key type Go "+
+				"recognises falls back to Go's public-key algorithm name (e.g. `DSA`, `ML-DSA`); an unrecognised "+
+				"key algorithm yields `Unknown`. For a security audit, RSA moduli below 2048 bits are considered "+
 				"weak. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL. Example: the "+
 				"committed fixture certificate carries a P-256 ECDSA key and returns `ECDSA-P256`.",
 			"Read the public-key algorithm with its size or curve: `RSA-<bits>` (e.g. `RSA-2048`), "+
 				"`ECDSA-<curve>` (e.g. `ECDSA-P256`), or `Ed25519`. RSA moduli under 2048 bits are weak.",
 			"key algorithm, public key, rsa, ecdsa, ed25519, curve, key size, key strength, cert_key_algorithm, x509, certificate"),
-		certExamples("cert_key_algorithm", "Read the public-key algorithm and size/curve of a PEM certificate (the fixture returns ECDSA-P256)."), func(h *certHandle) string { return KeyAlgorithm(h.cert) }})
-	w.RegisterScalar(&certStringScalar{"cert_signature_algorithm", "Certificate signature algorithm (Go crypto/x509 canonical name, e.g. ECDSA-SHA256)",
+		certExamples("cert_key_algorithm", "Read the public-key algorithm and size/curve of a PEM certificate (the fixture returns ECDSA-P256).", ComposedPolicyAuditExample), func(h *certHandle) string { return KeyAlgorithm(h.cert) }})
+	fns = append(fns, &certStringScalar{"cert_signature_algorithm", "Certificate signature algorithm (Go crypto/x509 canonical name, e.g. ECDSA-SHA256)",
 		objectTags("Certificate Signature Algorithm",
 			"Return the algorithm the issuing CA used to sign this certificate, as a `VARCHAR`. The value is Go "+
 				"crypto/x509's canonical name for the algorithm and is drawn from a fixed vocabulary: for RSA "+
-				"PKCS#1 v1.5, `SHA256-RSA`, `SHA384-RSA`, `SHA512-RSA` (and the legacy `SHA1-RSA`, `MD5-RSA`, "+
-				"`MD2-RSA`); for RSA-PSS, `SHA256-RSAPSS`, `SHA384-RSAPSS`, `SHA512-RSAPSS`; for ECDSA, "+
+				"PKCS#1 v1.5, `SHA256-RSA`, `SHA384-RSA`, `SHA512-RSA` (and the legacy `SHA1-RSA`, `MD5-RSA`); "+
+				"for RSA-PSS, `SHA256-RSAPSS`, `SHA384-RSAPSS`, `SHA512-RSAPSS`; for ECDSA, "+
 				"`ECDSA-SHA256`, `ECDSA-SHA384`, `ECDSA-SHA512` (and legacy `ECDSA-SHA1`); for DSA, `DSA-SHA1`, "+
-				"`DSA-SHA256`; and the single-token `Ed25519`. An unrecognized OID yields `Unknown Signature "+
-				"Algorithm`. Note the ordering convention differs by family — RSA/DSA render as hash-then-key "+
+				"`DSA-SHA256`; `Ed25519`; and `ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87`. An unrecognised OID, "+
+				"including the obsolete MD2-RSA, yields `Unknown`. Note the ordering convention differs by family — RSA/DSA render as hash-then-key "+
 				"(`SHA256-RSA`) while ECDSA renders as key-then-hash (`ECDSA-SHA256`) — so match on the whole "+
-				"token, not a positional split. For a security audit, the SHA-1, MD5 and MD2 variants are "+
+				"token, not a positional split. For a security audit, the SHA-1 and MD5 variants (and `Unknown`) are "+
 				"considered weak/deprecated and are the ones worth flagging. Accepts PEM text (`VARCHAR`) or DER "+
 				"bytes (`BLOB`); NULL input yields NULL. Example: the committed fixture certificate is P-256 "+
 				"ECDSA and returns `ECDSA-SHA256`.",
 			"Read the certificate signature algorithm as Go crypto/x509's canonical name (e.g. `ECDSA-SHA256`, "+
-				"`SHA256-RSA`, `Ed25519`). The value comes from a fixed vocabulary; the SHA-1/MD5/MD2 variants "+
+				"`SHA256-RSA`, `Ed25519`). The value comes from a fixed vocabulary; the SHA-1/MD5 variants "+
 				"are weak and worth flagging in an audit.",
 			"signature algorithm, signing algorithm, sha256, sha1, weak signature, ecdsa, rsa, rsapss, ed25519, cert_signature_algorithm, x509, certificate"),
-		certExamples("cert_signature_algorithm", "Read the signature algorithm of a PEM certificate (the fixture returns ECDSA-SHA256)."), func(h *certHandle) string { return SignatureAlgorithm(h.cert) }})
-	w.RegisterScalar(&certStringScalar{"cert_fingerprint", "SHA-256 fingerprint of the certificate (lowercase hex)",
+		certExamples("cert_signature_algorithm", "Read the signature algorithm of a PEM certificate (the fixture returns ECDSA-SHA256).", ComposedPolicyAuditExample), func(h *certHandle) string { return SignatureAlgorithm(h.cert) }})
+	fns = append(fns, &certStringScalar{"cert_fingerprint", "SHA-256 fingerprint of the certificate (lowercase hex)",
 		objectTags("Certificate SHA-256 Fingerprint",
 			"Return the SHA-256 fingerprint of the certificate's DER encoding as lowercase hex. Use it to uniquely identify or pin a certificate. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
 			"Compute the SHA-256 fingerprint of the certificate (lowercase hex).",
 			"fingerprint, sha256, thumbprint, hash, certificate pinning, cert_fingerprint, x509, certificate"),
 		certExamples("cert_fingerprint", "Compute the SHA-256 fingerprint of a PEM certificate (lowercase hex)."), func(h *certHandle) string { return Fingerprint(h.cert) }})
 
-	w.RegisterScalar(&certBoolScalar{"cert_is_expired", "Whether the certificate is outside its validity window now",
+	fns = append(fns, &certBoolScalar{"cert_is_expired", "Whether the certificate is outside its validity window now",
 		objectTags("Certificate Expiry Check",
 			"Return whether the certificate is currently outside its validity window (before not_before or after not_after relative to now). Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
 			"Check whether the certificate is currently expired (outside its validity window).",
 			"expired, expiry, validity, not after, not before, valid now, cert_is_expired, x509, certificate"),
-		certExamples("cert_is_expired", "Check whether a PEM certificate is currently outside its validity window."), func(h *certHandle) bool { return IsExpired(h.cert, time.Now()) }})
-	w.RegisterScalar(&certBoolScalar{"cert_is_ca", "Whether the certificate is a CA certificate",
+		certExamples("cert_is_expired", "Check whether a PEM certificate is currently outside its validity window.", ComposedHostCoverageExample), func(h *certHandle) bool { return IsExpired(h.cert, time.Now()) }})
+	fns = append(fns, &certBoolScalar{"cert_is_ca", "Whether the certificate is a CA certificate",
 		objectTags("Certificate CA Flag",
 			"Return whether the certificate is a CA certificate (basic constraints CA=true). Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
 			"Check whether the certificate is a CA certificate.",
 			"ca, certificate authority, basic constraints, is ca, intermediate, root, cert_is_ca, x509, certificate"),
 		certExamples("cert_is_ca", "Check whether a PEM certificate is a CA certificate."), func(h *certHandle) bool { return IsCA(h.cert) }})
 
-	w.RegisterScalar(&certTimestampScalar{"cert_not_before", "Start of the certificate validity window (UTC)",
+	fns = append(fns, &certTimestampScalar{"cert_not_before", "Start of the certificate validity window (UTC)",
 		objectTags("Certificate Valid-From Time",
 			"Return the start of the certificate's validity window (notBefore) as a UTC `TIMESTAMP`. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
 			"Read the start of the certificate validity window (`notBefore`, UTC).",
 			"not before, valid from, validity start, issued, cert_not_before, x509, certificate"),
 		certExamples("cert_not_before", "Read the start of a PEM certificate's validity window (UTC)."), func(h *certHandle) time.Time { return NotBefore(h.cert) }})
-	w.RegisterScalar(&certTimestampScalar{"cert_not_after", "End of the certificate validity window (UTC)",
+	fns = append(fns, &certTimestampScalar{"cert_not_after", "End of the certificate validity window (UTC)",
 		objectTags("Certificate Expiry Time",
 			"Return the end of the certificate's validity window (notAfter / expiry) as a UTC `TIMESTAMP`. Accepts PEM text (`VARCHAR`) or DER bytes (`BLOB`); NULL input yields NULL.",
 			"Read the certificate expiry (`notAfter`, end of validity window, UTC).",
 			"not after, expiry, valid until, validity end, expiration, cert_not_after, x509, certificate"),
-		certExamples("cert_not_after", "Read the expiry (end of validity window) of a PEM certificate (UTC)."), func(h *certHandle) time.Time { return NotAfter(h.cert) }})
+		certExamples("cert_not_after", "Read the expiry (end of validity window) of a PEM certificate (UTC).", ComposedPolicyAuditExample), func(h *certHandle) time.Time { return NotAfter(h.cert) }})
 
-	w.RegisterScalar(&certSANsScalar{})
+	fns = append(fns, &certSANsScalar{})
+	return fns
+}
+
+// Register registers every x509 function on the worker.
+func Register(w *vgi.Worker) {
+	for _, f := range scalarFunctions() {
+		w.RegisterScalar(f)
+	}
 
 	w.RegisterTable(vgi.AsTableFunction[certInfoState](&certInfoFunc{}))
 	w.RegisterTable(vgi.AsTableFunction[tlsInspectState](&tlsInspectFunc{}))

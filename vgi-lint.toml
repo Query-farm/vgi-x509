@@ -1,0 +1,16 @@
+# vgi-lint configuration for the vgi-x509 worker.
+#
+# The metadata-quality gate runs in CI via the reusable
+# `Query-farm/vgi-lint-check@v2` action against the built worker binary at
+# `--fail-on info` (see .github/workflows/ci.yml). This file pins the same
+# strictness locally so `vgi-lint` run by hand from the repo root matches CI:
+#
+#   make build
+#   uvx --prerelease allow --from 'vgi-lint-check>=2.5.1' vgi-lint lint \
+#       --execute --execute-mode run --fail-on info
+#
+# Execution stays on: every example runs offline over the committed fixture
+# certificates except the tls_inspect examples, which reach example.com:443.
+# No rules are suppressed.
+fail_on = "info"
+location = "./vgi-x509-worker"

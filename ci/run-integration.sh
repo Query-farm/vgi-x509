@@ -36,8 +36,9 @@
 #                      it (e.g. test/sql/cert_offline.test) to smoke a single
 #                      OFFLINE file — used by the Docker image_test.
 #   SKIP_MOCK          when non-empty, do NOT build/start the mock TLS server
-#                      (and do not set VGI_X509_TEST_ADDR). tls_inspect.test
-#                      require-env-SKIPs itself, so only the offline files run.
+#                      (and do not set VGI_X509_TEST_ADDR / VGI_X509_TEST_CERT_FILE).
+#                      tls_inspect.test and tls_pin.test require-env-SKIP
+#                      themselves, so only the offline files run.
 #                      Used by the Docker image_test, where Go and a reachable
 #                      mock backend are not available.
 #   For TRANSPORT=http, if VGI_X509_WORKER is ALREADY an http(s):// URL it is
@@ -86,7 +87,10 @@ if [ -z "${SKIP_MOCK:-}" ]; then
   ( cd "$REPO" && go build -o "$MOCK_BIN" ./cmd/mockserver )
 
   MOCK_PORT_FILE="$(mktemp)"
-  "$MOCK_BIN" --addr 127.0.0.1:0 >"$MOCK_PORT_FILE" 2>/dev/null &
+  # The mock writes the certificate it presents, so tls_pin.test can show a
+  # positive fingerprint match between tls_inspect and cert_fingerprint.
+  export VGI_X509_TEST_CERT_FILE="$STAGE/mock-cert.pem"
+  "$MOCK_BIN" --addr 127.0.0.1:0 --cert-out "$VGI_X509_TEST_CERT_FILE" >"$MOCK_PORT_FILE" 2>/dev/null &
   MOCK_PID=$!
 
   PORT=""
@@ -103,7 +107,7 @@ if [ -z "${SKIP_MOCK:-}" ]; then
   export VGI_X509_TEST_ADDR="127.0.0.1:$PORT"
   echo "Mock TLS server listening on $VGI_X509_TEST_ADDR (pid $MOCK_PID)"
 else
-  echo "SKIP_MOCK set: not starting the mock TLS server (offline tests only; tls_inspect.test will require-env-SKIP)"
+  echo "SKIP_MOCK set: not starting the mock TLS server (offline tests only; tls_inspect.test and tls_pin.test will require-env-SKIP)"
 fi
 
 # --- Per-transport: resolve VGI_X509_WORKER (the ATTACH LOCATION) ------------

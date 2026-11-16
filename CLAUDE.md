@@ -1,25 +1,34 @@
 # CLAUDE.md — vgi-x509
 
 Guidance for working in this repo. It is a **VGI worker** (Go) that parses X.509
-certificates and inspects TLS endpoints as DuckDB SQL functions. Defensive
-security / compliance tool. Catalog name: `x509`.
+certificates, inspects TLS endpoints and searches Certificate Transparency logs
+(crt.sh) as DuckDB SQL functions. Defensive security / compliance tool. Catalog
+name: `x509`.
 
 ## Layout
 
 ```
 cmd/vgi-x509-worker/   main(): catalog/schema tags, Register(), RunStdio/RunHttp/RunUnix
-cmd/mockserver/        standalone TLS server presenting a self-signed cert (E2E only)
+cmd/mockserver/        E2E backends: TLS server presenting a self-signed cert (PORT)
+                       + mock crt.sh HTTP API (CT_PORT, internal/ctsample)
 internal/x509worker/   the worker: cert.go (parsing), tls.go (inspection),
                        info.go (long-format dump), functions.go (VGI glue + Register),
-                       meta.go (fixtures, examples, agent tasks, cert_fields view)
+                       ct.go (crt.sh client: retry/backoff/timeouts),
+                       ct_functions.go (ct_search, ct_certificate),
+                       meta.go (examples, agent tasks, cert_fields view)
+internal/fixtures/     the two committed fixture PEMs (TestPEM, LegacyPEM)
+internal/ctsample/     sample CT log over the fixtures: offline answers for the
+                       reserved vgi-x509.example domain + the mock crt.sh Handler
 internal/testca/       self-signed cert generator (tests + mock server; NOT a real CA)
-test/sql/*.test        haybarn-unittest SQL E2E (cert_offline, tls_inspect, tls_pin)
+test/sql/*.test        haybarn-unittest SQL E2E (cert_offline, tls_inspect, tls_pin,
+                       ct_sample [offline], ct_search [mock crt.sh])
 ci/run-integration.sh  the SQL E2E driver used by CI and `make test-sql`
 vgi-agent-tests.yaml   private graders for the agent tasks (keyed by task name)
 vgi-lint.toml          vgi-lint settings (fail_on = info, location)
 ```
 
-The worker exposes 11 scalars, 2 table functions (`cert_info`, `tls_inspect`)
+The worker exposes 12 scalars (`ct_certificate` has two overloads: `(id)` and
+`(id, base_url)`), 3 table functions (`cert_info`, `tls_inspect`, `ct_search`)
 and 1 view (`cert_fields`).
 
 ## Go VGI pattern
@@ -82,6 +91,29 @@ self-signed included). Dial + handshake are bounded by `timeout_ms` via a
 context deadline — it never hangs. **AUTHORIZED endpoints only** (it opens a
 network connection). Document this everywhere it appears.
 
+## Certificate Transparency (ct_search / ct_certificate)
+
+- Fetch-mode over the free keyless **crt.sh** JSON API (`?q=<q>&output=json`,
+  `exclude=expired`, `deduplicate=Y`; certificate download `?d=<id>`). Not
+  SSLMate's commercial API. **Passive public data** — it never contacts the
+  hosts searched for, so no "authorized endpoints" caveat; say "passive" in docs.
+- crt.sh is slow and 429/502s under load: per-attempt `timeout_ms` (default
+  60 s), `max_retries` (default 3) with exponential backoff from `ctBackoff`
+  (500 ms; tests shrink it) and a capped `Retry-After`. Error messages name the
+  status and attempt count. Never treat a crt.sh failure as zero rows.
+- **Sample log**: with the default endpoint, identities ending in
+  `vgi-x509.example` (RFC 2606 `.example`, unissuable, so no real data is
+  shadowed) and the sample ids `9100000000000000001..3` are answered offline by
+  `internal/ctsample`. This makes the examples, the VGI911 scan probe (first
+  `ct_search` example) and the CT agent tasks deterministic when crt.sh is down.
+  `base_url` set → always HTTP (that's how the mock tests exercise the network
+  path with the same data). Keep the first `ct_search` example on the sample
+  domain; the live `example.com` example must not be first.
+- `ct_search` rows are sorted by crt.sh id descending; `max_results` keeps the
+  newest N; `include_certificate` fetches each PEM (≤ 100 rows, else error).
+- The mock's reserved identities (`flaky`/`ratelimited`/`broken`/`slow`
+  `.vgi-x509.example`) simulate crt.sh failure modes over HTTP only.
+
 ## Tests / haybarn
 
 - Unit tests generate self-signed certs in-process via `internal/testca` and
@@ -93,7 +125,8 @@ network connection). Document this everywhere it appears.
   '{VGI_X509_WORKER}')`. Env vars use the `{VAR}` form (2.0 deprecates
   `${VAR}`). Each file starts with `# group: [vgi_x509]`.
   `cert_offline.test` drives the pure functions over the **committed PEM
-  literals** (`fixturePEM` and `legacyPEM` in meta.go; regenerate with a
+  literals** (`fixturePEM` / `legacyPEM` in meta.go, defined in
+  internal/fixtures; regenerate with a
   throwaway program if one must change, then update the asserted fingerprints
   and serials). `tls_inspect.test` uses `require-env VGI_X509_TEST_ADDR` and
   `insecure := true`; `tls_pin.test` also needs `VGI_X509_TEST_CERT_FILE` (the
@@ -102,8 +135,9 @@ network connection). Document this everywhere it appears.
 - **Table functions can't take subqueries** in DuckDB — pass `cert_info` a PEM
   string literal, not `(SELECT ... )`.
 - `make test-sql` builds the worker and runs `ci/run-integration.sh` (the CI
-  driver): it starts `mockserver` (which prints `PORT:<n>` and `CN:<cn>`),
-  exports `VGI_X509_TEST_ADDR` and `VGI_X509_TEST_CERT_FILE`, runs haybarn with
+  driver): it starts `mockserver` (which prints `PORT:<n>`, `CN:<cn>` and
+  `CT_PORT:<n>`), exports `VGI_X509_TEST_ADDR`, `VGI_X509_TEST_CERT_FILE` and
+  `VGI_X509_CT_URL` (the mock crt.sh, used as `base_url`), runs haybarn with
   `--keep-home`, fails if every test was skipped, and kills the mock on exit.
   `TRANSPORT=http|unix` switches the worker transport.
 

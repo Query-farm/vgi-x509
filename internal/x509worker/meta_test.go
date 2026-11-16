@@ -24,6 +24,8 @@ func TestExampleListsWithinAgentLimit(t *testing.T) {
 	}
 	lists["cert_info"] = (&certInfoFunc{}).Metadata().Tags["vgi.example_queries"]
 	lists["tls_inspect"] = (&tlsInspectFunc{}).Metadata().Tags["vgi.example_queries"]
+	lists["ct_search"] = (&ctSearchFunc{}).Metadata().Tags["vgi.example_queries"]
+	lists["ct_certificate"] = (&ctCertificateScalar{}).Metadata().Tags["vgi.example_queries"]
 	for name, v := range lists {
 		if v == "" {
 			t.Errorf("%s: no vgi.example_queries", name)
@@ -53,6 +55,8 @@ func TestComposedExamplesOnDrivingObjects(t *testing.T) {
 		examples[f.Name()] = f.Metadata().Examples
 	}
 	examples["tls_inspect"] = (&tlsInspectFunc{}).Metadata().Examples
+	examples["ct_search"] = (&ctSearchFunc{}).Metadata().Examples
+	examples["ct_certificate"] = (&ctCertificateScalar{}).Metadata().Examples
 	want := map[string][]vgi.CatalogExample{
 		"cert_not_after":           {ComposedPolicyAuditExample},
 		"cert_key_algorithm":       {ComposedPolicyAuditExample},
@@ -60,6 +64,8 @@ func TestComposedExamplesOnDrivingObjects(t *testing.T) {
 		"cert_sans":                {ComposedHostCoverageExample},
 		"cert_is_expired":          {ComposedHostCoverageExample},
 		"tls_inspect":              {ComposedLiveInventoryExample},
+		"ct_search":                {ComposedCTAuditExample},
+		"ct_certificate":           {ComposedCTAuditExample},
 	}
 	for fn, composed := range want {
 		got := examples[fn]
@@ -78,7 +84,7 @@ func TestComposedExamplesOnDrivingObjects(t *testing.T) {
 			}
 		}
 	}
-	for _, c := range []vgi.CatalogExample{ComposedPolicyAuditExample, ComposedHostCoverageExample} {
+	for _, c := range []vgi.CatalogExample{ComposedPolicyAuditExample, ComposedHostCoverageExample, ComposedCTAuditExample} {
 		if !strings.Contains(SchemaExampleQueries, mustJSON(c.SQL)[1:40]) {
 			t.Errorf("schema example list lacks composed example %q", c.Description[:40])
 		}

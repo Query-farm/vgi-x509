@@ -19,8 +19,10 @@
 # In every transport the x509 worker's tls_inspect connects to a TLS endpoint,
 # so the suite ALWAYS needs the mock TLS server: this script builds the repo's
 # `mockserver`, starts it on a free port, and points tls_inspect at
-# 127.0.0.1:<port> via VGI_X509_TEST_ADDR (a host:port, NOT a URL). All started
-# processes are trap-killed on exit.
+# 127.0.0.1:<port> via VGI_X509_TEST_ADDR (a host:port, NOT a URL). The same
+# process serves a mock of the crt.sh Certificate Transparency API; its URL is
+# exported as VGI_X509_CT_URL for ct_search.test (base_url := ...), so no test
+# reaches the real crt.sh. All started processes are trap-killed on exit.
 #
 # Required environment:
 #   HAYBARN_UNITTEST   path to the haybarn-unittest binary
@@ -36,9 +38,10 @@
 #                      it (e.g. test/sql/cert_offline.test) to smoke a single
 #                      OFFLINE file — used by the Docker image_test.
 #   SKIP_MOCK          when non-empty, do NOT build/start the mock TLS server
-#                      (and do not set VGI_X509_TEST_ADDR / VGI_X509_TEST_CERT_FILE).
-#                      tls_inspect.test and tls_pin.test require-env-SKIP
-#                      themselves, so only the offline files run.
+#                      (and do not set VGI_X509_TEST_ADDR / VGI_X509_TEST_CERT_FILE /
+#                      VGI_X509_CT_URL). tls_inspect.test, tls_pin.test and
+#                      ct_search.test require-env-SKIP themselves, so only the
+#                      offline files run.
 #                      Used by the Docker image_test, where Go and a reachable
 #                      mock backend are not available.
 #   For TRANSPORT=http, if VGI_X509_WORKER is ALREADY an http(s):// URL it is
@@ -103,9 +106,21 @@ if [ -z "${SKIP_MOCK:-}" ]; then
     echo "ERROR: mock server did not report a port" >&2
     exit 1
   fi
+  # The same process serves the mock crt.sh API (CT_PORT) for ct_search.test.
+  CT_PORT=""
+  for _ in $(seq 1 30); do
+    CT_PORT="$(sed -n 's/^CT_PORT:\([0-9][0-9]*\)$/\1/p' "$MOCK_PORT_FILE" 2>/dev/null | head -1)"
+    [ -n "$CT_PORT" ] && break
+    sleep 0.2
+  done
+  if [ -z "$CT_PORT" ]; then
+    echo "ERROR: mock server did not report a crt.sh mock port" >&2
+    exit 1
+  fi
   rm -f "$MOCK_PORT_FILE"
   export VGI_X509_TEST_ADDR="127.0.0.1:$PORT"
-  echo "Mock TLS server listening on $VGI_X509_TEST_ADDR (pid $MOCK_PID)"
+  export VGI_X509_CT_URL="http://127.0.0.1:$CT_PORT/"
+  echo "Mock TLS server listening on $VGI_X509_TEST_ADDR, mock crt.sh at $VGI_X509_CT_URL (pid $MOCK_PID)"
 else
   echo "SKIP_MOCK set: not starting the mock TLS server (offline tests only; tls_inspect.test and tls_pin.test will require-env-SKIP)"
 fi

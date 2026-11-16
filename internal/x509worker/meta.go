@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/Query-farm/vgi-go/vgi"
+	"github.com/Query-farm/vgi-x509/internal/ctsample"
+	"github.com/Query-farm/vgi-x509/internal/fixtures"
 )
 
 // Shared per-object discovery / description metadata for the vgi-lint strict
@@ -75,18 +77,7 @@ func merge(base, extra map[string]string) map[string]string {
 // 2035-01-01, ECDSA P-256, SANs test.vgi-x509.example / alt.vgi-x509.example /
 // 127.0.0.1. Using a real certificate (instead of a "...") makes the examples
 // EXECUTE cleanly when the linter runs them against the attached worker.
-const fixturePEM = "-----BEGIN CERTIFICATE-----\n" +
-	"MIIB3DCCAYGgAwIBAgIEOt5osTAKBggqhkjOPQQDAjA7MRkwFwYDVQQKExBWR0kg\n" +
-	"WDUwOSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwHhcN\n" +
-	"MjUwMTAxMDAwMDAwWhcNMzUwMTAxMDAwMDAwWjA7MRkwFwYDVQQKExBWR0kgWDUw\n" +
-	"OSBGaXh0dXJlMR4wHAYDVQQDExV0ZXN0LnZnaS14NTA5LmV4YW1wbGUwWTATBgcq\n" +
-	"hkjOPQIBBggqhkjOPQMBBwNCAAS7Zbq+Bz73Y0wKrZZkw4owgz7qyAtXYUrNUkac\n" +
-	"Ot2h1WpF/Y+ODgRoeo0+ixbqPxA8+Lm9DTpksjsxTMRni/Owo3MwcTAOBgNVHQ8B\n" +
-	"Af8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADA8BgNV\n" +
-	"HREENTAzghV0ZXN0LnZnaS14NTA5LmV4YW1wbGWCFGFsdC52Z2kteDUwOS5leGFt\n" +
-	"cGxlhwR/AAABMAoGCCqGSM49BAMCA0kAMEYCIQCGCty4v7uWVHE/HhanzxE2kzBo\n" +
-	"KBiJ1j25vqPbFP4x7AIhAPdzfBNzgiIxriWsiBH1HBtoOCRsMJ6WN+j7zxyn9Np0\n" +
-	"-----END CERTIFICATE-----"
+const fixturePEM = fixtures.TestPEM
 
 // legacyPEM is a second committed fixture, so composed examples and agent tasks
 // can audit an inventory of more than one certificate. It is deliberately the
@@ -95,18 +86,7 @@ const fixturePEM = "-----BEGIN CERTIFICATE-----\n" +
 // RSA-1024 key (weak), signed with ECDSA-SHA1 (deprecated) by a separate
 // "VGI X509 Fixture CA" (so not self-signed), SAN legacy.vgi-x509.example. The
 // CA's key was thrown away; nothing here verifies the signature.
-const legacyPEM = "-----BEGIN CERTIFICATE-----\n" +
-	"MIIB0jCCAXigAwIBAgICA+kwCQYHKoZIzj0EATA5MRkwFwYDVQQKExBWR0kgWDUw\n" +
-	"OSBGaXh0dXJlMRwwGgYDVQQDExNWR0kgWDUwOSBGaXh0dXJlIENBMB4XDTE1MDEw\n" +
-	"MTAwMDAwMFoXDTE2MDEwMTAwMDAwMFowPTEZMBcGA1UEChMQVkdJIFg1MDkgRml4\n" +
-	"dHVyZTEgMB4GA1UEAxMXbGVnYWN5LnZnaS14NTA5LmV4YW1wbGUwgZ8wDQYJKoZI\n" +
-	"hvcNAQEBBQADgY0AMIGJAoGBAKnXtIZR7d7y/tykoXIu2UFuu6pOM3wTOgeA9REt\n" +
-	"a9h+tGfssuxWZ7c8ILquhCxda+A92qlCepAbgh7sfDCoV7X0ST5gzF+YuzXRxgxh\n" +
-	"drwhmeFLO9QcuVLF/Xu6japDPQ/eC6E/gaA0+p8vhE98WWC45S34wUPbPjmIEMC0\n" +
-	"lr9JAgMBAAGjJjAkMCIGA1UdEQQbMBmCF2xlZ2FjeS52Z2kteDUwOS5leGFtcGxl\n" +
-	"MAkGByqGSM49BAEDSQAwRgIhAKsIPC+paKp/9ZycM4y3pUVIFfHc0Kl7OsEuceKa\n" +
-	"riO1AiEA1Cd3nEmbffFOBMjt3TmYKYZRo4DskxRqX4I41HUb274=\n" +
-	"-----END CERTIFICATE-----"
+const legacyPEM = fixtures.LegacyPEM
 
 // executableExample is one guaranteed-runnable example (VGI509). expected_result
 // is intentionally omitted — the linter only needs each query to execute cleanly.
@@ -146,10 +126,6 @@ var SchemaExampleQueries = exampleQueriesJSON([]vgi.CatalogExample{
 		SQL:         "SELECT x509.main.cert_subject('" + fixturePEM + "') AS subject",
 	},
 	{
-		Description: "Flag a certificate that is currently outside its validity window.",
-		SQL:         "SELECT x509.main.cert_is_expired('" + fixturePEM + "') AS is_expired",
-	},
-	{
 		Description: "List a certificate's subject alternative names (DNS names then IP addresses).",
 		SQL:         "SELECT x509.main.cert_sans('" + fixturePEM + "') AS sans",
 	},
@@ -159,6 +135,7 @@ var SchemaExampleQueries = exampleQueriesJSON([]vgi.CatalogExample{
 	},
 	ComposedPolicyAuditExample,
 	ComposedHostCoverageExample,
+	ComposedCTAuditExample,
 })
 
 // Composed examples: each one combines several of this worker's objects in one
@@ -218,6 +195,27 @@ var ComposedLiveInventoryExample = vgi.CatalogExample{
 		"LEFT JOIN certs AS i ON x509.main.cert_fingerprint(i.pem) = t.fingerprint ORDER BY t.seq",
 }
 
+// sampleDomain and sampleLeafID come from the built-in sample CT log
+// (internal/ctsample): ct_search / ct_certificate answer them offline, so the
+// CT examples run deterministically without crt.sh.
+const (
+	sampleDomain = ctsample.SampleDomain
+	sampleLeafID = ctsample.TestLeafID
+)
+
+// ComposedCTAuditExample audits what the CT logs hold for a domain: ct_search
+// lists the logged certificates, ct_certificate downloads each one, and the
+// cert_* scalars read the key and signature algorithms from it. Over the
+// sample domain it is offline, so it also sits in the schema example list.
+var ComposedCTAuditExample = vgi.CatalogExample{
+	Description: "Certificate Transparency audit of a domain: list every certificate logged for its subdomains " +
+		"(ct_search), download each one (ct_certificate) and read its key and signature algorithms with the cert_* " +
+		"scalars. On the sample domain the expired legacy certificate shows RSA-1024 with an ECDSA-SHA1 signature.",
+	SQL: "SELECT c.common_name, c.not_after, x509.main.cert_key_algorithm(x509.main.ct_certificate(c.id)) AS key_algorithm, " +
+		"x509.main.cert_signature_algorithm(x509.main.ct_certificate(c.id)) AS signature_algorithm " +
+		"FROM x509.main.ct_search('%." + sampleDomain + "', deduplicate := true) AS c ORDER BY c.not_after",
+}
+
 // exampleQueriesJSON encodes a function's CatalogExample list as the
 // vgi.example_queries tag payload (VGI515): a JSON array of {description, sql}
 // objects. Emitting it as a tag preserves each example's description, which the
@@ -238,6 +236,9 @@ const (
 	CategoryParsing = "Certificate parsing"
 	// CategoryTLS groups the live TLS-endpoint inspection (tls_inspect).
 	CategoryTLS = "TLS endpoints"
+	// CategoryCT groups the Certificate Transparency search (ct_search,
+	// ct_certificate).
+	CategoryCT = "Certificate Transparency"
 )
 
 // category is one {name, description} entry in the vgi.categories registry.
@@ -261,6 +262,12 @@ var CategoriesJSON = mustJSON([]category{
 		Name: CategoryTLS,
 		Description: "Connect to a live TLS endpoint given as host:port (AUTHORIZED endpoints only) and return " +
 			"the certificate chain the server presents.",
+	},
+	{
+		Name: CategoryCT,
+		Description: "Search the public Certificate Transparency logs through crt.sh for the certificates issued " +
+			"for a domain or subdomain pattern, and download a logged certificate by its crt.sh id. A passive " +
+			"lookup of public data that never contacts the hosts searched for.",
 	},
 })
 
@@ -286,8 +293,10 @@ func twoCertPrompt(question string) string {
 
 // AgentTestTasksJSON is the catalog-level vgi.agent_test_tasks payload (VGI152):
 // a JSON array of {name, prompt} tasks that `vgi-lint simulate` uses to measure
-// how well an agent actually drives this worker. All but one are offline: each
-// prompt embeds a committed fixture certificate. Exported so the catalog tags in
+// how well an agent actually drives this worker. All but one are offline: most
+// prompts embed a committed fixture certificate, and the Certificate
+// Transparency tasks search the reserved sample domain, which ct_search answers
+// from the built-in sample log. Exported so the catalog tags in
 // cmd/ can attach it.
 var AgentTestTasksJSON = mustJSON([]agentTestTask{
 	{
@@ -397,6 +406,23 @@ var AgentTestTasksJSON = mustJSON([]agentTestTask{
 		Prompt: twoCertPrompt("Which of these two certificates has weak cryptography: an RSA key shorter than " +
 			"2048 bits, or a SHA-1 or MD5 signature? Return one row with one VARCHAR column: its serial number " +
 			"as a decimal string, exactly as the worker reports it."),
+	},
+	{
+		// ct_search over the reserved sample domain (answered offline, so
+		// reference_sql is exact). deduplicate drops the precertificate.
+		Name: "certificates in Certificate Transparency logs",
+		Prompt: "Search the Certificate Transparency logs for every certificate issued for any subdomain of " +
+			sampleDomain + ", counting each certificate once (not its precertificate separately). Return one row " +
+			"per certificate with two columns: the common name (VARCHAR) and the expiry time (TIMESTAMP, UTC), " +
+			"ordered by common name.",
+	},
+	{
+		// Composed: ct_search + ct_certificate + cert_key_algorithm. Only the
+		// legacy sample certificate has an RSA key.
+		Name: "logged certificate with an RSA key",
+		Prompt: "Among the certificates the Certificate Transparency logs hold for subdomains of " + sampleDomain +
+			", which one has an RSA public key? Inspect the logged certificates themselves. Return one row with " +
+			"one VARCHAR column: that certificate's common name.",
 	},
 })
 

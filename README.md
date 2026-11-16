@@ -4,16 +4,17 @@
 
 <p align="center"><em>A <a href="https://query.farm">Query.Farm</a> VGI worker for DuckDB.</em></p>
 
-# Parse X.509 Certificates & Inspect TLS Endpoints in DuckDB
+# Parse X.509 Certificates, Inspect TLS Endpoints & Search CT Logs in DuckDB
 
 > **vgi-x509** · a [Query.Farm](https://query.farm) VGI worker
 
 [![CI](https://github.com/Query-farm/vgi-x509/actions/workflows/ci.yml/badge.svg)](https://github.com/Query-farm/vgi-x509/actions/workflows/ci.yml)
 
 A [VGI](https://query.farm) worker, written in **Go**, that parses **X.509
-certificates** and inspects **TLS endpoints** — all exposed as DuckDB/SQL
-functions. It is a defensive **security / compliance** tool: certificate
-inventory, expiry monitoring, and endpoint inspection.
+certificates**, inspects **TLS endpoints** and searches **Certificate
+Transparency logs** — all exposed as DuckDB/SQL functions. It is a defensive
+**security / compliance** tool: certificate inventory, expiry monitoring,
+endpoint inspection, and discovering every certificate issued for your domains.
 
 Built on the [`vgi-go`](https://github.com/Query-farm/vgi-go) SDK; speaks the
 VGI protocol over stdio. Catalog name: `x509`.
@@ -38,6 +39,11 @@ SELECT field, value FROM x509.cert_info('<PEM>');
 -- Inspect a live TLS endpoint (AUTHORIZED endpoints only — see below):
 SELECT seq, subject, not_after, fingerprint
 FROM x509.tls_inspect('example.com:443');
+
+-- Every certificate Certificate Transparency logs hold for your subdomains
+-- (passive: queries crt.sh, never your hosts):
+SELECT id, common_name, sans, not_after
+FROM x509.ct_search('%.example.com', exclude_expired := true, deduplicate := true);
 ```
 
 ## Quick start
@@ -158,6 +164,69 @@ error; the function never hangs. A `NULL` `host_port` yields zero rows.
 > default (`insecure := true`), because the purpose is to inspect whatever a
 > server presents — including expired or self-signed certificates.
 
+### Certificate Transparency search
+
+`ct_search(query) -> (id BIGINT, issuer_ca_id BIGINT, issuer_name, common_name, sans VARCHAR[], serial_number, not_before TIMESTAMP, not_after TIMESTAMP, entry_timestamp TIMESTAMP, pem)`
+— search the public [Certificate Transparency](https://certificate.transparency.dev/)
+logs through the free, keyless [crt.sh](https://crt.sh/) JSON API and return one
+row per logged certificate, newest first (crt.sh `id` descending). `query` is an
+exact domain (`example.com`) or a SQL LIKE pattern (`%.example.com` for every
+subdomain). `sans` is crt.sh's newline-separated `name_value` split into a list;
+`serial_number` is lowercase hex as crt.sh reports it (`cert_serial` returns the
+same number in decimal). All timestamps are UTC. Named options:
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `exclude_expired` | `false` | Drop certificates already past `not_after` (crt.sh `exclude=expired`) |
+| `deduplicate` | `false` | One row per certificate instead of precertificate + final certificate (crt.sh `deduplicate=Y`) |
+| `max_results` | `0` | Keep only the newest N entries (0 = all) |
+| `include_certificate` | `false` | Also download each certificate into `pem` (one extra request per row, at most 100 rows) |
+| `timeout_ms` | `60000` | Timeout for each crt.sh HTTP attempt |
+| `max_retries` | `3` | Retries on HTTP 429 / 5xx / network errors, with exponential backoff (honours a short `Retry-After`) |
+| `base_url` | `NULL` | A crt.sh mirror or test server instead of `https://crt.sh/` |
+
+`ct_certificate(id) -> VARCHAR` downloads the certificate crt.sh logged under
+an id (`https://crt.sh/?d=<id>`) as PEM text, so it composes with every
+`cert_*` scalar; an id crt.sh does not know yields NULL. `ct_certificate(id,
+base_url)` targets a mirror or test server.
+
+```sql
+-- Key and signature algorithms of every unexpired certificate issued for a domain.
+SELECT c.id, c.common_name, c.not_after,
+       x509.cert_key_algorithm(x509.ct_certificate(c.id)) AS key_algorithm,
+       x509.cert_signature_algorithm(x509.ct_certificate(c.id)) AS signature_algorithm
+FROM x509.ct_search('example.com', exclude_expired := true, deduplicate := true) AS c;
+
+-- The same in one call, downloading inside ct_search:
+SELECT common_name, x509.cert_sans(pem)
+FROM x509.ct_search('example.com', deduplicate := true, max_results := 10,
+                    include_certificate := true);
+```
+
+> **Passive, public data.** `ct_search` and `ct_certificate` query crt.sh, a
+> public index of the CT logs. They never connect to the hosts being searched
+> for, so unlike `tls_inspect` they need no authorization from the domain owner.
+> crt.sh is a free community service that is often slow and answers HTTP 429 /
+> 502 under load: keep wildcard queries narrow, and expect an occasional clear
+> "crt.sh answered HTTP 5xx after N attempt(s)" error. The worker does not
+> depend on SSLMate's commercial CT API.
+
+**Sample log.** The reserved domain `vgi-x509.example` (RFC 2606 `.example`
+names cannot be issued by any CA, so crt.sh never holds entries for them) is
+answered offline from a built-in sample log over the worker's two committed
+fixture certificates, as are its crt.sh ids `9100000000000000001`–`…003`. That
+keeps the published examples and agent tasks runnable when crt.sh is down. It
+applies only to the default endpoint; with `base_url` every query goes over HTTP.
+
+```sql
+SELECT c.common_name, c.not_after,
+       x509.cert_key_algorithm(x509.ct_certificate(c.id)) AS key_algorithm
+FROM x509.ct_search('%.vgi-x509.example', deduplicate := true) AS c
+ORDER BY c.not_after;
+-- legacy.vgi-x509.example  2016-01-01 00:00:00  RSA-1024
+-- test.vgi-x509.example    2035-01-01 00:00:00  ECDSA-P256
+```
+
 ### Combining functions
 
 The scalars compose over a column of certificates, so one query can audit a
@@ -214,12 +283,12 @@ ORDER BY t.seq;
 Runnable versions of these queries, over the worker's two committed sample
 certificates, are in the schema's `vgi.example_queries` and on the examples of
 `cert_not_after`, `cert_key_algorithm`, `cert_signature_algorithm`,
-`cert_sans`, `cert_is_expired` and `tls_inspect`.
+`cert_sans`, `cert_is_expired`, `tls_inspect`, `ct_search` and `ct_certificate`.
 
 ## Build & test
 
 ```sh
-make build       # build the worker + mock-TLS-server binaries
+make build       # build the worker + mock-server (TLS + crt.sh) binaries
 make test-unit   # pure-Go unit tests
 make test-sql    # haybarn-unittest SQL E2E against a local mock TLS server
 make test        # both
@@ -235,10 +304,14 @@ export PATH="$HOME/.local/bin:$PATH"
 
 The cert-parsing scalars and `cert_info` are pure (no network) and are tested in
 SQL against two committed PEM fixtures. `tls_inspect` is tested against a tiny mock
-TLS server (`cmd/mockserver`) that presents a generated self-signed certificate.
-`make test-sql` runs `ci/run-integration.sh`, the same script CI uses: it starts
-the mock server on a free port, points the tests at it via `VGI_X509_TEST_ADDR`
-(and at its certificate via `VGI_X509_TEST_CERT_FILE`), and stops it afterward.
+TLS server (`cmd/mockserver`) that presents a generated self-signed certificate;
+the same process serves a mock of the crt.sh API (`internal/ctsample`) for
+`ct_search` and `ct_certificate`, including its failure modes (HTTP 503 then
+success, persistent 429, a non-JSON answer, a stall), so no test reaches the
+real crt.sh. `make test-sql` runs `ci/run-integration.sh`, the same script CI
+uses: it starts the mock server on free ports, points the tests at it via
+`VGI_X509_TEST_ADDR` and `VGI_X509_CT_URL` (and at its certificate via
+`VGI_X509_TEST_CERT_FILE`), and stops it afterward.
 `make test-sql TRANSPORT=http` (or `unix`) runs the suite over another worker
 transport.
 
@@ -255,6 +328,8 @@ uvx --prerelease allow --from 'vgi-lint-check>=2.5.1' vgi-lint lint \
 - This worker is licensed under the **MIT License** — see [`LICENSE`](./LICENSE).
 - Certificate parsing and TLS inspection use only the **Go standard library**
   (`crypto/x509`, `encoding/pem`, `crypto/tls`) — no third-party crypto.
+- Certificate Transparency search calls the public [crt.sh](https://crt.sh/)
+  service (operated by Sectigo) over HTTPS; no account or API key.
 - The VGI SDK [`vgi-go`](https://github.com/Query-farm/vgi-go) is a separate
   dependency under its own license (the Query Farm Source-Available License).
 

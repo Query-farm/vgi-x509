@@ -1,0 +1,134 @@
+# name: test/sql/ct_search.test
+# description: ct_search / ct_certificate against the local mock crt.sh API (started by ci/run-integration.sh)
+# group: [vgi_x509]
+
+require-env VGI_X509_WORKER
+
+require-env VGI_X509_CT_URL
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'x509' AS x509 (TYPE vgi, LOCATION '{VGI_X509_WORKER}');
+
+# The mock (internal/ctsample) logs the two committed fixture certificates:
+# test.vgi-x509.example twice (precertificate ...001 + final certificate ...002)
+# and the expired legacy.vgi-x509.example once (...003). Rows come newest first.
+
+# Exact domain: precertificate and final certificate, typed columns.
+query IITTTTTTT
+SELECT id, issuer_ca_id, issuer_name, common_name, sans, serial_number, not_before, not_after, entry_timestamp
+FROM x509.ct_search('test.vgi-x509.example', base_url := '{VGI_X509_CT_URL}');
+----
+9100000000000000002	9001	O=VGI X509 Fixture, CN=test.vgi-x509.example	test.vgi-x509.example	[alt.vgi-x509.example, test.vgi-x509.example]	3ade68b1	2025-01-01 00:00:00	2035-01-01 00:00:00	2025-01-01 00:10:00.5
+9100000000000000001	9001	O=VGI X509 Fixture, CN=test.vgi-x509.example	test.vgi-x509.example	[alt.vgi-x509.example, test.vgi-x509.example]	3ade68b1	2025-01-01 00:00:00	2035-01-01 00:00:00	2025-01-01 00:05:00.25
+
+# Column types are BIGINT / VARCHAR[] / TIMESTAMP; pem is NULL unless asked for.
+query TTTT
+SELECT typeof(id), typeof(sans), typeof(entry_timestamp), pem IS NULL
+FROM x509.ct_search('test.vgi-x509.example', base_url := '{VGI_X509_CT_URL}') LIMIT 1;
+----
+BIGINT	VARCHAR[]	TIMESTAMP	true
+
+# Wildcard over every subdomain.
+query IT
+SELECT id, common_name FROM x509.ct_search('%.vgi-x509.example', base_url := '{VGI_X509_CT_URL}');
+----
+9100000000000000003	legacy.vgi-x509.example
+9100000000000000002	test.vgi-x509.example
+9100000000000000001	test.vgi-x509.example
+
+# deduplicate := true collapses the precertificate; exclude_expired drops legacy.
+query IT
+SELECT id, common_name FROM x509.ct_search('%.vgi-x509.example', deduplicate := true, base_url := '{VGI_X509_CT_URL}');
+----
+9100000000000000003	legacy.vgi-x509.example
+9100000000000000002	test.vgi-x509.example
+
+query IT
+SELECT id, common_name FROM x509.ct_search('%.vgi-x509.example', exclude_expired := true, deduplicate := true,
+  base_url := '{VGI_X509_CT_URL}');
+----
+9100000000000000002	test.vgi-x509.example
+
+# max_results keeps the newest N.
+query I
+SELECT id FROM x509.ct_search('%.vgi-x509.example', max_results := 1, base_url := '{VGI_X509_CT_URL}');
+----
+9100000000000000003
+
+# No match -> zero rows; NULL query -> zero rows.
+query I
+SELECT count(*) FROM x509.ct_search('nothing.vgi-x509.example', base_url := '{VGI_X509_CT_URL}');
+----
+0
+
+query I
+SELECT count(*) FROM x509.ct_search(NULL, base_url := '{VGI_X509_CT_URL}');
+----
+0
+
+# include_certificate downloads each certificate; it feeds the cert_* scalars,
+# and its decimal serial matches crt.sh's hex serial_number.
+query TTTT
+SELECT common_name, x509.cert_key_algorithm(pem), x509.cert_sans(pem),
+       x509.cert_serial(pem) = CAST(('0x' || serial_number)::UBIGINT AS VARCHAR)
+FROM x509.ct_search('%.vgi-x509.example', deduplicate := true, include_certificate := true,
+  base_url := '{VGI_X509_CT_URL}') ORDER BY common_name;
+----
+legacy.vgi-x509.example	RSA-1024	[legacy.vgi-x509.example]	true
+test.vgi-x509.example	ECDSA-P256	[test.vgi-x509.example, alt.vgi-x509.example, 127.0.0.1]	true
+
+# ct_certificate(id, base_url) downloads by id; repeated ids are fine, an
+# unknown id is NULL, a NULL id is NULL.
+query TT
+SELECT x509.cert_subject(x509.ct_certificate(c.id, '{VGI_X509_CT_URL}')),
+       x509.cert_signature_algorithm(x509.ct_certificate(c.id, '{VGI_X509_CT_URL}'))
+FROM x509.ct_search('%.vgi-x509.example', base_url := '{VGI_X509_CT_URL}') AS c ORDER BY c.id;
+----
+CN=test.vgi-x509.example,O=VGI X509 Fixture	ECDSA-SHA256
+CN=test.vgi-x509.example,O=VGI X509 Fixture	ECDSA-SHA256
+CN=legacy.vgi-x509.example,O=VGI X509 Fixture	ECDSA-SHA1
+
+query TT
+SELECT x509.ct_certificate(42, '{VGI_X509_CT_URL}') IS NULL, x509.ct_certificate(NULL, '{VGI_X509_CT_URL}') IS NULL;
+----
+true	true
+
+# The fetched certificate is byte-identical to the committed fixture.
+query T
+SELECT x509.cert_fingerprint(x509.ct_certificate(9100000000000000002, '{VGI_X509_CT_URL}'));
+----
+9e35a0b16a0912d01fc75093fd8ab5500f0a425e6b91110c0054f66bb7df5b16
+
+# Retry: the flaky identity answers HTTP 503 on every other request; the
+# default max_retries (3) absorbs it.
+query T
+SELECT common_name FROM x509.ct_search('flaky.vgi-x509.example', base_url := '{VGI_X509_CT_URL}');
+----
+legacy.vgi-x509.example
+
+# HTTP 429 after the retries are spent -> a clear error.
+statement error
+SELECT * FROM x509.ct_search('ratelimited.vgi-x509.example', max_retries := 1, base_url := '{VGI_X509_CT_URL}');
+----
+crt.sh answered HTTP 429 after 2 attempt(s)
+
+# A non-JSON answer -> a clear error.
+statement error
+SELECT * FROM x509.ct_search('broken.vgi-x509.example', base_url := '{VGI_X509_CT_URL}');
+----
+non-JSON response
+
+# A slow answer is cut off by timeout_ms.
+statement error
+SELECT * FROM x509.ct_search('slow.vgi-x509.example', timeout_ms := 500, max_retries := 0, base_url := '{VGI_X509_CT_URL}');
+----
+timeout_ms
+
+# Argument validation.
+statement error
+SELECT * FROM x509.ct_search('x.vgi-x509.example', max_results := -1, base_url := '{VGI_X509_CT_URL}');
+----
+max_results

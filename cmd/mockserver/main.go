@@ -1,17 +1,21 @@
 // Copyright 2026 Query Farm LLC - https://query.farm
 
-// Command mockserver runs a standalone TLS server presenting a generated
-// self-signed certificate. It is used by the haybarn SQL end-to-end tests: the
-// Makefile starts it on a free port, reads the printed PORT line, and points
-// the worker's tls_inspect function at 127.0.0.1:<port>.
+// Command mockserver runs the offline backends for the haybarn SQL end-to-end
+// tests:
+//
+//   - a TLS server presenting a generated self-signed certificate, which the
+//     worker's tls_inspect is pointed at (127.0.0.1:<PORT>);
+//   - a plain-HTTP mock of the crt.sh Certificate Transparency API
+//     (internal/ctsample), which ct_search / ct_certificate are pointed at with
+//     base_url := 'http://127.0.0.1:<CT_PORT>/'.
 //
 // Usage:
 //
-//	mockserver [--addr 127.0.0.1:0] [--cert-out <path>]
+//	mockserver [--addr 127.0.0.1:0] [--ct-addr 127.0.0.1:0] [--cert-out <path>]
 //
-// On startup it prints "PORT:<n>" (the bound TCP port) and "CN:<commonName>"
-// (the certificate subject CN) to stdout so a caller can discover both even
-// when binding to :0. With --cert-out it also writes the certificate it
+// On startup it prints "PORT:<n>" (the TLS port), "CN:<commonName>" (the TLS
+// certificate subject CN) and "CT_PORT:<n>" (the crt.sh mock port) to stdout so
+// a caller can discover them even when binding to :0. With --cert-out it also writes the certificate it
 // presents as PEM to <path>, so a test can check that tls_inspect's fingerprint
 // equals cert_fingerprint over the same certificate (a positive pin match).
 package main
@@ -22,10 +26,13 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/Query-farm/vgi-x509/internal/ctsample"
 	"github.com/Query-farm/vgi-x509/internal/testca"
 )
 
@@ -36,7 +43,17 @@ const mockCN = "mock.tls.local"
 func main() {
 	addr := flag.String("addr", "127.0.0.1:0", "TCP address to listen on (host:port; port 0 = pick a free port)")
 	certOut := flag.String("cert-out", "", "Write the presented certificate as PEM to this path")
+	ctAddr := flag.String("ct-addr", "127.0.0.1:0", "TCP address for the mock crt.sh HTTP API")
 	flag.Parse()
+
+	ctLis, err := net.Listen("tcp", *ctAddr)
+	if err != nil {
+		log.Fatalf("mockserver: listen %q: %v", *ctAddr, err)
+	}
+	go func() {
+		srv := &http.Server{Handler: &ctsample.Handler{}, ReadHeaderTimeout: 10 * time.Second}
+		_ = srv.Serve(ctLis)
+	}()
 
 	spec := testca.Default()
 	spec.CommonName = mockCN
@@ -60,6 +77,7 @@ func main() {
 	port := lis.Addr().(*net.TCPAddr).Port
 	fmt.Printf("PORT:%d\n", port)
 	fmt.Printf("CN:%s\n", mockCN)
+	fmt.Printf("CT_PORT:%d\n", ctLis.Addr().(*net.TCPAddr).Port)
 	_ = os.Stdout.Sync()
 
 	// Graceful shutdown on SIGINT/SIGTERM so the Makefile's `kill` is clean.

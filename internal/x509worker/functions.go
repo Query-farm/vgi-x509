@@ -773,6 +773,9 @@ func Register(w *vgi.Worker) {
 
 	w.RegisterTable(vgi.AsTableFunction[certInfoState](&certInfoFunc{}))
 	w.RegisterTable(vgi.AsTableFunction[tlsInspectState](&tlsInspectFunc{}))
+	w.RegisterTable(vgi.AsTableFunction[ctSearchState](&ctSearchFunc{}))
+	w.RegisterScalar(&ctCertificateScalar{})
+	w.RegisterScalar(&ctCertificateScalar{withBaseURL: true})
 
 	registerCertFieldsView(w)
 }

@@ -41,17 +41,20 @@ func main() {
 
 	w := vgi.NewWorker(
 		vgi.WithCatalogName(x509worker.CatalogName),
-		vgi.WithCatalogComment("Parse X.509 certificates and inspect TLS endpoints"),
+		vgi.WithCatalogComment("Parse X.509 certificates, inspect TLS endpoints and search Certificate Transparency logs"),
 		vgi.WithCatalogTags(map[string]string{
 			"source":       "vgi-x509",
 			"vgi.title":    "X.509 & TLS",
-			"vgi.subtitle": "Read subjects, expiry dates and fingerprints from X.509 certificates, and fetch the chain a TLS server presents.",
-			"vgi.keywords": x509worker.KeywordsJSON("x509, certificate, tls, ssl, pem, der, fingerprint, subject, issuer, expiry, sans, certificate authority, security, compliance"),
+			"vgi.subtitle": "Read subjects, expiry and fingerprints from certificates, fetch TLS chains, and find every logged certificate for a domain.",
+			"vgi.keywords": x509worker.KeywordsJSON("x509, certificate, tls, ssl, pem, der, fingerprint, subject, issuer, expiry, sans, certificate authority, certificate transparency, crt.sh, security, compliance"),
 			"vgi.doc_llm": "Defensive X.509 / TLS inspection toolkit over SQL. Parse a certificate " +
 				"(PEM text or DER bytes) and read its subject, issuer, serial, validity window, public-key and " +
 				"signature algorithms, SHA-256 fingerprint, CA flag, expiry status, and subject alternative " +
 				"names; dump every certificate field in long format; and connect to a live TLS host:port " +
-				"(AUTHORIZED endpoints only) to return the presented certificate chain. Use to audit, triage, " +
+				"(AUTHORIZED endpoints only) to return the presented certificate chain; and search the public " +
+				"Certificate Transparency logs through crt.sh for every certificate issued for a domain or " +
+				"subdomain pattern, downloading logged certificates by id (a passive lookup of public data). " +
+				"Use to audit, triage, " +
 				"and report on certificates and TLS endpoints for security and compliance.",
 			"vgi.doc_md": "# X.509 Certificate & TLS Inspection for DuckDB\n\n" +
 				"**Parse X.509 certificates and inspect live TLS endpoints directly in SQL** — read subjects, " +
@@ -61,13 +64,15 @@ func main() {
 				"This is a defensive security and compliance toolkit for anyone who works with certificates at " +
 				"scale: SREs auditing certificate expiry across a fleet, security engineers triaging TLS " +
 				"configurations, and compliance teams reporting on certificate authorities, key algorithms, and " +
-				"signature algorithms. Instead of shelling out to `openssl` and parsing text by hand, you query " +
+				"signature algorithms. Certificate Transparency search adds the outside view: every certificate a " +
+				"public CA has logged for your domains, including ones you did not know were issued. Instead of shelling out to `openssl` and parsing text by hand, you query " +
 				"certificates and endpoints as ordinary SQL columns and rows, then filter, join, and aggregate " +
 				"them like any other DuckDB data.\n\n" +
 				"It is powered entirely by the Go standard library's battle-tested " +
 				"[`crypto/x509`](https://pkg.go.dev/crypto/x509) and " +
-				"[`crypto/tls`](https://pkg.go.dev/crypto/tls) packages — no third-party parsing code and no " +
-				"external services. The worker speaks the VGI protocol over Arrow, so DuckDB attaches it as a " +
+				"[`crypto/tls`](https://pkg.go.dev/crypto/tls) packages — no third-party parsing code. The only " +
+				"external service is the free, keyless [crt.sh](https://crt.sh/) index of the public " +
+				"Certificate Transparency logs, used only for Certificate Transparency search. The worker speaks the VGI protocol over Arrow, so DuckDB attaches it as a " +
 				"catalog and certificate parsing runs in-process at native speed. Certificate inputs are " +
 				"accepted as **PEM text** (`VARCHAR`) or **DER bytes** (`BLOB`); the format is sniffed from the " +
 				"content at runtime, so one query works for both.\n\n" +
@@ -86,7 +91,9 @@ func main() {
 				"hygiene across a fleet, group a certificate table by `cert_key_algorithm` and " +
 				"`cert_signature_algorithm` and count the weak ones. To confirm what a server actually " +
 				"serves, call the `tls_inspect` table function on an **authorized** `host:port` and read " +
-				"back the presented chain. Browse the `cert_fields` registry view to discover every " +
+				"back the presented chain. To find every certificate issued for your domain, search the public " +
+				"Certificate Transparency logs with a `'%.example.com'` pattern (a passive lookup via crt.sh that " +
+				"never contacts your hosts) and download the logged certificates for the parsing scalars. Browse the `cert_fields` registry view to discover every " +
 				"attribute the worker can read and the scalar that returns each; ready-to-run, fully " +
 				"qualified statements live in the `x509.main` schema's example queries.\n\n" +
 				"Learn more about the underlying library in the " +
@@ -107,13 +114,14 @@ func main() {
 			SourceURL: ptr("https://github.com/Query-farm/vgi-x509"),
 		}),
 		vgi.WithSchemaComments(map[string]string{
-			"main": "X.509 certificate parsing and TLS endpoint inspection functions.",
+			"main": "X.509 certificate parsing, TLS endpoint inspection and Certificate Transparency search functions.",
 		}),
 		vgi.WithSchemaTags(map[string]map[string]string{
 			"main": {
 				"vgi.title": "Certificate functions",
 				"vgi.keywords": x509worker.KeywordsJSON("x509, certificate, tls, ssl, pem, der, cert_subject, cert_issuer, cert_fingerprint, " +
-					"cert_sans, cert_info, tls_inspect, expiry, certificate authority"),
+					"cert_sans, cert_info, tls_inspect, ct_search, ct_certificate, certificate transparency, crt.sh, " +
+					"expiry, certificate authority"),
 				// VGI123 classifying tags use BARE keys (NOT vgi.-namespaced).
 				"domain":   "security",
 				"category": "parsing",
@@ -123,7 +131,8 @@ func main() {
 				"vgi.doc_llm": "X.509 certificate parsing and TLS inspection functions: read subject, " +
 					"issuer, serial, validity window, key/signature algorithms, SHA-256 fingerprint, CA flag, " +
 					"expiry status, and subject alternative names from a PEM/DER certificate; dump all fields in " +
-					"long format; and fetch the certificate chain presented by a live TLS host:port.",
+					"long format; fetch the certificate chain presented by a live TLS host:port; and search " +
+					"Certificate Transparency logs (crt.sh) for the certificates issued for a domain.",
 				"vgi.doc_md": "## x509.main\n\n" +
 					"Defensive **X.509 certificate** parsing and **TLS endpoint** inspection, " +
 					"exposed as DuckDB SQL functions over Apache Arrow.\n\n" +
@@ -133,7 +142,9 @@ func main() {
 					"alternative names) — ideal for filtering, joining, and aggregating certificate columns. Table " +
 					"functions expand a certificate or endpoint into rows: one dumps every attribute of a " +
 					"certificate for ad-hoc inspection, the other connects to a live TLS endpoint " +
-					"(**AUTHORIZED endpoints only**) and returns the presented chain.\n\n" +
+					"(**AUTHORIZED endpoints only**) and returns the presented chain, and a third searches the " +
+					"public Certificate Transparency logs through crt.sh (a passive lookup that never contacts " +
+					"the hosts searched for); a companion scalar downloads a logged certificate for the parsing scalars.\n\n" +
 					"### Usage\n\n" +
 					"Certificate inputs accept **PEM text** (`VARCHAR`) or **DER bytes** (`BLOB`); " +
 					"the content is sniffed at runtime. NULL certificate input yields NULL " +

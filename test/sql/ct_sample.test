@@ -1,0 +1,49 @@
+# name: test/sql/ct_sample.test
+# description: ct_search / ct_certificate over the built-in sample CT log (reserved vgi-x509.example domain; no network)
+# group: [vgi_x509]
+
+require-env VGI_X509_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'x509' AS x509 (TYPE vgi, LOCATION '{VGI_X509_WORKER}');
+
+# With the default endpoint (no base_url), identities in the reserved sample
+# domain are answered offline from internal/ctsample, so the published
+# examples run without crt.sh.
+
+# ct_search's first published example.
+query ITTT
+SELECT id, common_name, sans, not_after FROM x509.main.ct_search('%.vgi-x509.example',
+  exclude_expired := true, deduplicate := true) ORDER BY id;
+----
+9100000000000000002	test.vgi-x509.example	[alt.vgi-x509.example, test.vgi-x509.example]	2035-01-01 00:00:00
+
+query I
+SELECT count(*) FROM x509.ct_search('test.vgi-x509.example');
+----
+2
+
+# ct_certificate's published example.
+query T
+SELECT x509.main.cert_subject(x509.main.ct_certificate(9100000000000000002)) AS subject;
+----
+CN=test.vgi-x509.example,O=VGI X509 Fixture
+
+# ComposedCTAuditExample.
+query TTTT
+SELECT c.common_name, c.not_after, x509.main.cert_key_algorithm(x509.main.ct_certificate(c.id)) AS key_algorithm,
+  x509.main.cert_signature_algorithm(x509.main.ct_certificate(c.id)) AS signature_algorithm
+FROM x509.main.ct_search('%.vgi-x509.example', deduplicate := true) AS c ORDER BY c.not_after;
+----
+legacy.vgi-x509.example	2016-01-01 00:00:00	RSA-1024	ECDSA-SHA1
+test.vgi-x509.example	2035-01-01 00:00:00	ECDSA-P256	ECDSA-SHA256
+
+# include_certificate over the sample log.
+query T
+SELECT x509.cert_fingerprint(pem) FROM x509.ct_search('test.vgi-x509.example', deduplicate := true,
+  include_certificate := true);
+----
+9e35a0b16a0912d01fc75093fd8ab5500f0a425e6b91110c0054f66bb7df5b16

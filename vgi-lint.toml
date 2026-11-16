@@ -10,7 +10,11 @@
 #       --execute --execute-mode run --fail-on info
 #
 # Execution stays on: every example runs offline over the committed fixture
-# certificates except the tls_inspect examples, which reach example.com:443.
+# certificates (the Certificate Transparency ones over the built-in sample log
+# for vgi-x509.example) except the tls_inspect examples, which reach
+# example.com:443, and one ct_search example, which queries crt.sh. crt.sh is
+# often slow or down; with --execute-mode run that example can then report a
+# VGI901 runtime warning that is crt.sh's, not the worker's.
 # No rules are suppressed.
 fail_on = "info"
 location = "./vgi-x509-worker"

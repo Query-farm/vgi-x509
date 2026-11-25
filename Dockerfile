@@ -86,9 +86,11 @@ USER app
 EXPOSE 8000
 
 # Readiness probe for HTTP mode. Inert for a short-lived stdio container, which
-# has no HTTP server (the probe just fails harmlessly there).
+# has no HTTP server (the probe just fails harmlessly there). HEAD, not GET:
+# in Orchard hosted mode (VGI_ORCHARD_HOSTED=1) only HEAD /health is anonymous;
+# GET /health answers 401 and would mark the container unhealthy.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -fsS "http://localhost:${PORT:-8000}/health" || exit 1
+    CMD curl -fsSI "http://localhost:${PORT:-8000}/health" || exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["http"]

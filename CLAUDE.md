@@ -119,7 +119,7 @@ network connection). Document this everywhere it appears.
 - Unit tests generate self-signed certs in-process via `internal/testca` and
   assert every scalar over PEM **and** DER inputs, malformed → error, NULL →
   NULL, plus `tls_inspect` against an in-process TLS server.
-- SQL E2E (`haybarn-unittest` **2.0**; 1.x cannot attach a vgi.v3 worker and
+- SQL E2E (`haybarn-unittest` **2.0.1+**: protocol 3.4 needs the 2.0.1 engine path, 2.0.0 gets the 3.3 vgi build; 1.x cannot attach a vgi.v3 worker and
   rejects `--keep-home`): `require vgi` is **silently SKIPPED**, so use
   `statement ok` + `LOAD vgi;` and `ATTACH 'x509' ... (TYPE vgi, LOCATION
   '{VGI_X509_WORKER}')`. Env vars use the `{VAR}` form (2.0 deprecates
@@ -159,7 +159,7 @@ network connection). Document this everywhere it appears.
 ## Verify
 
 ```sh
-export PATH="$HOME/.local/bin:$PATH"   # haybarn-unittest 2.0
+export PATH="$HOME/.local/bin:$PATH"   # haybarn-unittest >=2.0.1rc3 (protocol 3.4)
 go build ./... && go vet ./... && gofmt -l . && go test ./... && golangci-lint run
 make test-sql                          # also TRANSPORT=http, TRANSPORT=unix
 make build && uvx --prerelease allow --from 'vgi-lint-check>=2.5.1' vgi-lint lint \
